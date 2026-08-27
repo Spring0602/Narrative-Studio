@@ -1,0 +1,32 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: narrative-studio-backend
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/narrative_studio?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
+    username: ${DB_USERNAME:narrative}
+    password: ${DB_PASSWORD:narrative_dev}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jackson:
+    default-property-inclusion: non_null
+    time-zone: Asia/Shanghai
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+
+app:
+  jwt:
+    # 生产环境必须通过 JWT_SECRET 注入至少 32 字节的随机值。
+    secret: ${JWT_SECRET:dev-only-change-this-secret-32-bytes-minimum}
+    expiration-seconds: ${JWT_EXPIRATION_SECONDS:86400}
+  cors:
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:5173}
+
+logging:
+  level:
+    edu.njust.narrativestudio: INFO
