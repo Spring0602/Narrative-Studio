@@ -2,7 +2,7 @@
 
 ## 推荐安装
 
-1. JDK 17：安装后在 PowerShell 执行 `java -version`。
+1. JDK 25：安装后在 PowerShell 执行 `java -version`。
 2. Maven 3.9+：执行 `mvn -version`。
 3. Node.js 20 LTS 或更高：执行 `node -v`、`npm -v`。
 4. Docker Desktop：用于启动 MySQL；确认 Docker Desktop 已运行。

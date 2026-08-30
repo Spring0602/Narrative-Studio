@@ -12,7 +12,7 @@
 
 ## 技术架构
 
-- 后端：Java 17、Spring Boot、Spring MVC、Spring Security、MyBatis-Plus、MySQL
+- 后端：Java 25、Spring Boot、Spring MVC、Spring Security、MyBatis-Plus、MySQL
 - 前端：Vue 3、TypeScript、Vite、Element Plus、Vue Flow
 - 架构：表示层 → Controller → Service → Mapper → MySQL
 - 鉴权：无状态 JWT；项目级权限由 Service 层统一校验
@@ -21,7 +21,7 @@
 
 ### 1. 准备环境
 
-- JDK 17
+- JDK 25
 - Maven 3.9+
 - Node.js 20+ 与 npm 10+
 - Docker Desktop（推荐）或 MySQL 8.0+
