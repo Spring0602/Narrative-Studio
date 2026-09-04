@@ -1,3 +1,6 @@
+-- Navicat 执行入口 1/2：先运行本文件创建 MySQL 数据库和全部业务表。
+-- 适用版本：MySQL 8.0+。执行完成后可继续运行 demo_story.sql。
+
 CREATE DATABASE IF NOT EXISTS narrative_studio
   DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 USE narrative_studio;

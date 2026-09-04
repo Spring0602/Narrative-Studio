@@ -6,9 +6,9 @@
 
 | 状态 | 内容 |
 |---|---|
-| 已实现 | 注册、登录、JWT、统一响应与异常、项目创建/列表/详情/编辑/归档、OWNER/EDITOR/TESTER 权限基础、前端登录与项目工作台 |
+| 已实现 | 注册、登录、JWT、统一响应与异常、项目 CRUD、成员管理、世界观条目、角色档案与剧情图后端 CRUD、权限及引用校验、前端登录与项目工作台 |
 | 已设计表结构 | 世界观、角色、关系与知识、节点、选择、变量、条件、效果、测试会话、测试步骤、检测问题、反馈 |
-| 待按计划实现 | 成员邀请、世界观与角色 CRUD、可视化剧情图、规则引擎、剧情模拟、图结构检测、AI 适配层 |
+| 待按计划实现 | 世界观、角色与剧情图前端页面、角色关系与知识、规则引擎、剧情模拟、图结构检测、AI 适配层 |
 
 ## 技术架构
 
@@ -24,15 +24,18 @@
 - JDK 25
 - Maven 3.9+
 - Node.js 20+ 与 npm 10+
-- Docker Desktop（推荐）或 MySQL 8.0+
+- MySQL 8.0+
+- Navicat（用于连接 MySQL、执行 SQL 脚本和日常数据管理）
 
-### 2. 启动数据库
 
-```bash
-docker compose up -d mysql
-```
+### 2. 初始化数据库（Navicat）
 
-首次启动会执行 `database/schema.sql`。如果不用 Docker，请手动创建 MySQL 数据库并执行该脚本。
+1. 在 Navicat 中新建 MySQL 连接并确认服务可用。
+2. 打开并运行 `database/schema.sql`，创建数据库、数据表和索引。
+3. 需要演示数据时，再运行 `database/demo_story.sql`。
+4. 按本机账号修改 `.env` 或设置 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD`。
+
+
 
 ### 3. 启动后端
 
@@ -62,7 +65,7 @@ narrative-studio/
 ├─ database/                建库脚本和演示剧情数据
 ├─ docs/                    架构、接口、任务计划与协作规范
 ├─ scripts/                 项目检查脚本
-├─ docker-compose.yml       本地 MySQL
+
 └─ README.md                启动入口
 ```
 
