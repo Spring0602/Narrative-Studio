@@ -54,3 +54,14 @@ npm run dev
 ### 数据库改了但没有生效
 
 Docker 初始化脚本只在空数据卷执行。开发期如需重建，请先备份有价值数据；停止容器后删除本项目的 `narrative_mysql_data` 卷再启动。不要删除不确定归属的其他 Docker 卷。
+
+## 验证与注意事项
+
+- 本项目已在 **JDK 25**（Java 25.0.1）下完成本地构建与测试验证。如需复现：
+
+```powershell
+cd backend
+..\..\Users\34107\.maven\maven-3.9.15\bin\mvn.cmd -f .\pom.xml clean test
+```
+
+- 在 JDK 25 下，Mockito 可能会输出关于动态 agent 的警告（构建仍然通过）。如果未来 JDK 版本禁止动态加载 agent，可按 Mockito 文档将其作为 JVM agent 添加到构建/测试配置中。
