@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1300"><rect width="100%" height="100%" fill="white"/>
+<text x="800" y="25" font-family="Microsoft YaHei,sans-serif" font-size="40" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">（c）剧情与规则</text>
+<rect x="60" y="140" width="440" height="212" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="60" y="140" width="440" height="64" fill="#FFF1CC" stroke="#294660" stroke-width="3"/>
+<text x="280" y="157" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">story_node</text>
+<text x="76" y="218" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">PK id</text>
+<text x="76" y="261" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK project_id</text>
+<text x="76" y="304" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">UK (project_id, node_key)</text>
+<rect x="1100" y="140" width="440" height="255" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="1100" y="140" width="440" height="64" fill="#FFF1CC" stroke="#294660" stroke-width="3"/>
+<text x="1320" y="157" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">story_choice</text>
+<text x="1116" y="218" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">PK id</text>
+<text x="1116" y="261" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK project_id</text>
+<text x="1116" y="304" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK source_node_id</text>
+<text x="1116" y="347" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK target_node_id</text>
+<rect x="60" y="780" width="440" height="255" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="60" y="780" width="440" height="64" fill="#E8F1E1" stroke="#294660" stroke-width="3"/>
+<text x="280" y="797" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">choice_condition</text>
+<text x="76" y="858" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">PK id</text>
+<text x="76" y="901" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK choice_id</text>
+<text x="76" y="944" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK variable_id</text>
+<text x="76" y="987" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">operator / expected_value</text>
+<rect x="580" y="780" width="440" height="212" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="580" y="780" width="440" height="64" fill="#E8F1E1" stroke="#294660" stroke-width="3"/>
+<text x="800" y="797" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">state_variable</text>
+<text x="596" y="858" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">PK id</text>
+<text x="596" y="901" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK project_id</text>
+<text x="596" y="944" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">value_type / initial_value</text>
+<rect x="1100" y="780" width="440" height="255" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="1100" y="780" width="440" height="64" fill="#E8F1E1" stroke="#294660" stroke-width="3"/>
+<text x="1320" y="797" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">state_effect</text>
+<text x="1116" y="858" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">PK id</text>
+<text x="1116" y="901" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK choice_id</text>
+<text x="1116" y="944" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK variable_id</text>
+<text x="1116" y="987" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">operation / operand_value</text>
+<polyline points="500,215 1100,215" fill="none" stroke="#294660" stroke-width="3"/>
+<text x="512" y="179" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">1</text>
+<text x="1033" y="179" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">0..*</text>
+<text x="800" y="170" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">source_node_id · 起始节点</text>
+<polyline points="500,310 1100,310" fill="none" stroke="#294660" stroke-width="3"/>
+<text x="512" y="274" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">1</text>
+<text x="1033" y="274" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">0..*</text>
+<text x="800" y="265" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">target_node_id · 目标节点</text>
+<polyline points="1220,395 1220,540 280,540 280,780" fill="none" stroke="#294660" stroke-width="3"/>
+<text x="1232" y="407" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">1</text>
+<text x="292" y="741" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">0..*</text>
+<text x="690" y="493" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">选择包含条件</text>
+<polyline points="1420,395 1420,780" fill="none" stroke="#294660" stroke-width="3"/>
+<text x="1432" y="407" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">1</text>
+<text x="1432" y="741" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">0..*</text>
+<text x="1240" y="625" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">选择包含效果</text>
+<polyline points="580,895 500,895" fill="none" stroke="#294660" stroke-width="3"/>
+<text x="554" y="859" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">1</text>
+<text x="510" y="905" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">0..*</text>
+<polyline points="1020,895 1100,895" fill="none" stroke="#294660" stroke-width="3"/>
+<text x="1030" y="859" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">1</text>
+<text x="1036" y="905" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">0..*</text>
+<text x="800" y="1160" font-family="Microsoft YaHei,sans-serif" font-size="29" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">各 project_id 均引用 narrative_project.id（项目 1 — 本表 0..*）。</text>
+<text x="800" y="1210" font-family="Microsoft YaHei,sans-serif" font-size="29" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">条件和效果通过 variable_id 引用状态变量。</text>
+</svg>

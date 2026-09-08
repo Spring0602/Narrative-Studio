@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1290"><rect width="100%" height="100%" fill="white"/>
+<text x="800" y="25" font-family="Microsoft YaHei,sans-serif" font-size="40" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">（b）角色与知识</text>
+<rect x="60" y="140" width="440" height="212" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="60" y="140" width="440" height="64" fill="#E8F1E1" stroke="#294660" stroke-width="3"/>
+<text x="280" y="157" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">character_profile</text>
+<text x="76" y="218" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">PK id</text>
+<text x="76" y="261" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK project_id</text>
+<text x="76" y="304" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">name</text>
+<rect x="1100" y="140" width="440" height="212" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="1100" y="140" width="440" height="64" fill="#FFF1CC" stroke="#294660" stroke-width="3"/>
+<text x="1320" y="157" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">story_node</text>
+<text x="1116" y="218" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">PK id</text>
+<text x="1116" y="261" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK project_id</text>
+<text x="1116" y="304" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">UK (project_id, node_key)</text>
+<rect x="580" y="140" width="440" height="169" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="580" y="140" width="440" height="64" fill="#E8F1E1" stroke="#294660" stroke-width="3"/>
+<text x="800" y="157" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">node_character</text>
+<text x="596" y="218" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">PK, FK node_id</text>
+<text x="596" y="261" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">PK, FK character_id</text>
+<rect x="60" y="690" width="440" height="255" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="60" y="690" width="440" height="64" fill="#E8F1E1" stroke="#294660" stroke-width="3"/>
+<text x="280" y="707" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">character_relation</text>
+<text x="76" y="768" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">PK id</text>
+<text x="76" y="811" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK project_id</text>
+<text x="76" y="854" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK source_character_id</text>
+<text x="76" y="897" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK target_character_id</text>
+<rect x="1100" y="690" width="440" height="255" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="1100" y="690" width="440" height="64" fill="#E8F1E1" stroke="#294660" stroke-width="3"/>
+<text x="1320" y="707" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">character_knowledge</text>
+<text x="1116" y="768" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">PK id</text>
+<text x="1116" y="811" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK project_id</text>
+<text x="1116" y="854" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK character_id</text>
+<text x="1116" y="897" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK? acquired_node_id</text>
+<polyline points="500,240 580,240" fill="none" stroke="#294660" stroke-width="3"/>
+<text x="510" y="204" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">1</text>
+<text x="516" y="250" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">0..*</text>
+<polyline points="1100,240 1020,240" fill="none" stroke="#294660" stroke-width="3"/>
+<text x="1074" y="204" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">1</text>
+<text x="1030" y="250" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">0..*</text>
+<polyline points="180,352 180,690" fill="none" stroke="#294660" stroke-width="3"/>
+<text x="192" y="364" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">1</text>
+<text x="192" y="651" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">0..*</text>
+<text x="120" y="475" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">源角色</text>
+<polyline points="360,352 360,690" fill="none" stroke="#294660" stroke-width="3"/>
+<text x="372" y="364" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">1</text>
+<text x="372" y="651" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">0..*</text>
+<text x="420" y="553" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">目标角色</text>
+<polyline points="500,310 550,310 550,590 1200,590 1200,690" fill="none" stroke="#294660" stroke-width="3"/>
+<text x="512" y="274" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">1</text>
+<text x="1212" y="651" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">0..*</text>
+<text x="1020" y="550" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">所属角色</text>
+<polyline points="1400,352 1400,690" fill="none" stroke="#294660" stroke-width="3"/>
+<text x="1412" y="364" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">0..1</text>
+<text x="1412" y="651" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">0..*</text>
+<text x="1460" y="500" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">获知节点</text>
+<text x="800" y="1060" font-family="Microsoft YaHei,sans-serif" font-size="30" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">node_character 的两个外键共同构成复合主键。</text>
+<text x="800" y="1110" font-family="Microsoft YaHei,sans-serif" font-size="29" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">FK? 表示可空外键；跨子图出现的同名实体是同一张表。</text>
+<text x="800" y="1170" font-family="Microsoft YaHei,sans-serif" font-size="29" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">各 project_id 均引用 narrative_project.id（项目 1 — 本表 0..*）。</text>
+</svg>

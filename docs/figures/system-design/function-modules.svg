@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1020"><rect width="100%" height="100%" fill="white"/>
+<text x="800" y="25" font-family="Microsoft YaHei,sans-serif" font-size="40" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">叙事工坊功能模块划分</text>
+<rect x="600" y="110" width="400" height="90" fill="#DFEDF8" stroke="#294660" stroke-width="3"/>
+<text x="800.0" y="136.5" font-family="Microsoft YaHei,sans-serif" font-size="37" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">叙事工坊</text>
+<polyline points="800,200 800,260" fill="none" stroke="#294660" stroke-width="3"/>
+<polyline points="215,260 1385,260" fill="none" stroke="#294660" stroke-width="3"/>
+<polyline points="215,260 215,330" fill="none" stroke="#294660" stroke-width="3"/>
+<rect x="50" y="330" width="330" height="90" fill="#FFF1CC" stroke="#294660" stroke-width="3"/>
+<text x="215.0" y="359.0" font-family="Microsoft YaHei,sans-serif" font-size="32" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">账户与项目</text>
+<polyline points="215,420 215,455 64,455 64,770" fill="none" stroke="#294660" stroke-width="3"/>
+<polyline points="64,540 105,540" fill="none" stroke="#294660" stroke-width="3"/>
+<rect x="105" y="500" width="275" height="80" fill="white" stroke="#294660" stroke-width="3"/>
+<text x="242.5" y="524.0" font-family="Microsoft YaHei,sans-serif" font-size="32" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">注册与登录</text>
+<polyline points="64,655 105,655" fill="none" stroke="#294660" stroke-width="3"/>
+<rect x="105" y="615" width="275" height="80" fill="white" stroke="#294660" stroke-width="3"/>
+<text x="242.5" y="639.0" font-family="Microsoft YaHei,sans-serif" font-size="32" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">项目维护</text>
+<polyline points="64,770 105,770" fill="none" stroke="#294660" stroke-width="3"/>
+<rect x="105" y="730" width="275" height="80" fill="white" stroke="#294660" stroke-width="3"/>
+<text x="242.5" y="754.0" font-family="Microsoft YaHei,sans-serif" font-size="32" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">成员与权限</text>
+<polyline points="605,260 605,330" fill="none" stroke="#294660" stroke-width="3"/>
+<rect x="440" y="330" width="330" height="90" fill="#FFF1CC" stroke="#294660" stroke-width="3"/>
+<text x="605.0" y="359.0" font-family="Microsoft YaHei,sans-serif" font-size="32" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">内容建模</text>
+<polyline points="605,420 605,455 454,455 454,770" fill="none" stroke="#294660" stroke-width="3"/>
+<polyline points="454,540 495,540" fill="none" stroke="#294660" stroke-width="3"/>
+<rect x="495" y="500" width="275" height="80" fill="white" stroke="#294660" stroke-width="3"/>
+<text x="632.5" y="524.0" font-family="Microsoft YaHei,sans-serif" font-size="32" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">角色档案</text>
+<polyline points="454,655 495,655" fill="none" stroke="#294660" stroke-width="3"/>
+<rect x="495" y="615" width="275" height="80" fill="white" stroke="#294660" stroke-width="3"/>
+<text x="632.5" y="639.0" font-family="Microsoft YaHei,sans-serif" font-size="32" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">世界设定</text>
+<polyline points="454,770 495,770" fill="none" stroke="#294660" stroke-width="3"/>
+<rect x="495" y="730" width="275" height="80" fill="white" stroke="#294660" stroke-width="3"/>
+<text x="632.5" y="754.0" font-family="Microsoft YaHei,sans-serif" font-size="32" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">状态变量</text>
+<polyline points="995,260 995,330" fill="none" stroke="#294660" stroke-width="3"/>
+<rect x="830" y="330" width="330" height="90" fill="#FFF1CC" stroke="#294660" stroke-width="3"/>
+<text x="995.0" y="359.0" font-family="Microsoft YaHei,sans-serif" font-size="32" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">剧情编排</text>
+<polyline points="995,420 995,455 844,455 844,770" fill="none" stroke="#294660" stroke-width="3"/>
+<polyline points="844,540 885,540" fill="none" stroke="#294660" stroke-width="3"/>
+<rect x="885" y="500" width="275" height="80" fill="white" stroke="#294660" stroke-width="3"/>
+<text x="1022.5" y="524.0" font-family="Microsoft YaHei,sans-serif" font-size="32" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">剧情节点</text>
+<polyline points="844,655 885,655" fill="none" stroke="#294660" stroke-width="3"/>
+<rect x="885" y="615" width="275" height="80" fill="white" stroke="#294660" stroke-width="3"/>
+<text x="1022.5" y="639.0" font-family="Microsoft YaHei,sans-serif" font-size="32" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">选择分支</text>
+<polyline points="844,770 885,770" fill="none" stroke="#294660" stroke-width="3"/>
+<rect x="885" y="730" width="275" height="80" fill="white" stroke="#294660" stroke-width="3"/>
+<text x="1022.5" y="754.0" font-family="Microsoft YaHei,sans-serif" font-size="32" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">条件与效果</text>
+<polyline points="1385,260 1385,330" fill="none" stroke="#294660" stroke-width="3"/>
+<rect x="1220" y="330" width="330" height="90" fill="#FFF1CC" stroke="#294660" stroke-width="3"/>
+<text x="1385.0" y="359.0" font-family="Microsoft YaHei,sans-serif" font-size="32" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">模拟与质量</text>
+<polyline points="1385,420 1385,455 1234,455 1234,770" fill="none" stroke="#294660" stroke-width="3"/>
+<polyline points="1234,540 1275,540" fill="none" stroke="#294660" stroke-width="3"/>
+<rect x="1275" y="500" width="275" height="80" fill="white" stroke="#294660" stroke-width="3"/>
+<text x="1412.5" y="524.0" font-family="Microsoft YaHei,sans-serif" font-size="32" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">剧情模拟</text>
+<polyline points="1234,655 1275,655" fill="none" stroke="#294660" stroke-width="3"/>
+<rect x="1275" y="615" width="275" height="80" fill="white" stroke="#294660" stroke-width="3"/>
+<text x="1412.5" y="639.0" font-family="Microsoft YaHei,sans-serif" font-size="32" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">结构检测</text>
+<polyline points="1234,770 1275,770" fill="none" stroke="#294660" stroke-width="3"/>
+<rect x="1275" y="730" width="275" height="80" fill="white" stroke="#294660" stroke-width="3"/>
+<text x="1412.5" y="754.0" font-family="Microsoft YaHei,sans-serif" font-size="32" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">反馈处理</text>
+<text x="800" y="925" font-family="Microsoft YaHei,sans-serif" font-size="30" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">层级关系：系统 → 业务模块 → 子功能</text>
+</svg>
