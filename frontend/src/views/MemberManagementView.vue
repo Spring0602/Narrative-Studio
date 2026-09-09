@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import type { EditableMemberRole, MemberSummary } from '@/api/members'
+import type {
+  EditableMemberRole,
+  MemberRole,
+  MemberSummary,
+} from '@/api/members'
 
 // TODO(B): 后端联调后删除 mock 数据，改用 listMembers() 获取真实成员
 const members = ref<MemberSummary[]>([
@@ -22,6 +26,10 @@ const members = ref<MemberSummary[]>([
     joinedAt: '2026-09-09 11:00',
   },
 ])
+
+// TODO(B): 后端联调后从真实项目数据中读取当前用户角色
+const currentUserRole = ref<MemberRole>('OWNER')
+const canManageMembers = computed(() => currentUserRole.value === 'OWNER')
 
 const dialogVisible = ref(false)
 const form = reactive<{ username: string; memberRole: EditableMemberRole }>({
@@ -104,7 +112,14 @@ async function removeMockMember(member: MemberSummary) {
         <h1>项目成员</h1>
         <p class="muted">查看和管理参与当前剧情项目的用户。</p>
       </div>
-      <el-button type="primary" size="large" @click="openAddDialog">添加成员</el-button>
+      <el-button
+        v-if="canManageMembers"
+        type="primary"
+        size="large"
+        @click="openAddDialog"
+      >
+        添加成员
+      </el-button>
     </div>
 
     <el-table :data="members" class="member-table">
@@ -112,8 +127,11 @@ async function removeMockMember(member: MemberSummary) {
       <el-table-column prop="displayName" label="显示名称" />
       <el-table-column label="项目角色" width="220">
         <template #default="{ row }">
-          <el-tag v-if="row.memberRole === 'OWNER'" type="warning">
-            OWNER
+          <el-tag
+            v-if="row.memberRole === 'OWNER' || !canManageMembers"
+            :type="row.memberRole === 'OWNER' ? 'warning' : 'info'"
+          >
+            {{ row.memberRole }}
           </el-tag>
 
           <el-select
@@ -131,8 +149,11 @@ async function removeMockMember(member: MemberSummary) {
       <el-table-column prop="joinedAt" label="加入时间" />
       <el-table-column label="操作" width="120" align="right">
         <template #default="{ row }">
-          <span v-if="row.memberRole === 'OWNER'" class="protected-text">
-            不可移除
+          <span
+            v-if="row.memberRole === 'OWNER' || !canManageMembers"
+            class="protected-text"
+          >
+            {{ row.memberRole === 'OWNER' ? '不可移除' : '无管理权限' }}
           </span>
 
           <el-button
