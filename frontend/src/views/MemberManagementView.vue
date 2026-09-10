@@ -9,7 +9,7 @@ import type {
 } from '@/api/members'
 
 const route = useRoute()
-const isPreviewRoute = computed(() => route.path.startsWith('/preview/'))
+const isPreviewRoute = computed(() => import.meta.env.DEV && route.path.startsWith('/preview/'))
 
 // TODO(B): 后端联调后删除 mock 数据，改用 listMembers() 获取真实成员
 const initialMockMembers: MemberSummary[] = [
@@ -186,7 +186,13 @@ async function retryMockLoad() {
 </script>
 
 <template>
-  <section class="member-page">
+  <el-result
+    v-if="!isPreviewRoute"
+    icon="info"
+    title="成员管理待联调"
+    sub-title="成员管理原型仅在开发预览中开放，当前页面不会修改项目成员。"
+  />
+  <section v-else class="member-page">
     <div class="member-heading">
       <div>
         <p class="eyebrow">MEMBERS</p>

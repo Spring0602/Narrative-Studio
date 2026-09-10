@@ -8,7 +8,7 @@ const router = useRouter()
 const activeModule = ref('overview')
 const modules = [
   { key: 'overview', label: '项目概览', ready: true },
-  { key: 'members', label: '成员管理', ready: true },
+  { key: 'members', label: '成员管理', ready: false },
   { key: 'world', label: '世界观', ready: false },
   { key: 'characters', label: '角色档案', ready: false },
   { key: 'story', label: '剧情节点', ready: false },
@@ -31,7 +31,7 @@ const modules = [
           @click="activeModule = item.key"
         >
           {{ item.label }}
-          <small v-if="!item.ready">待开发</small>
+          <small v-if="!item.ready">{{ item.key === 'members' ? '待联调' : '待开发' }}</small>
         </button>
       </nav>
     </aside>
