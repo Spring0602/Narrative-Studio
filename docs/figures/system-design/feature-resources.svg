@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="630"><rect width="100%" height="100%" fill="white"/>
+<text x="800" y="25" font-family="Microsoft YaHei,sans-serif" font-size="40" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">剧情编辑功能的 MVC 资源组织</text>
+<rect x="60" y="110" width="240" height="76" fill="#DFEDF8" stroke="#294660" stroke-width="3"/>
+<text x="180.0" y="132.5" font-family="Microsoft YaHei,sans-serif" font-size="31" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">View</text>
+<polyline points="300,148 390,148" fill="none" stroke="#294660" stroke-width="3"/>
+<polygon points="390,148 376.0,141.0 376.0,155.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<rect x="390" y="110" width="1150" height="76" fill="white" stroke="#294660" stroke-width="3"/>
+<text x="965.0" y="134.0" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">WorkspaceView.vue · 剧情图画布 · 节点与选项表单</text>
+<rect x="60" y="208" width="240" height="76" fill="#FFF1CC" stroke="#294660" stroke-width="3"/>
+<text x="180.0" y="230.5" font-family="Microsoft YaHei,sans-serif" font-size="31" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">Controller</text>
+<polyline points="300,246 390,246" fill="none" stroke="#294660" stroke-width="3"/>
+<polygon points="390,246 376.0,239.0 376.0,253.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<rect x="390" y="208" width="1150" height="76" fill="white" stroke="#294660" stroke-width="3"/>
+<text x="965.0" y="232.0" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">StoryGraphController · StoryGraphDtos</text>
+<rect x="60" y="306" width="240" height="76" fill="#E8F1E1" stroke="#294660" stroke-width="3"/>
+<text x="180.0" y="328.5" font-family="Microsoft YaHei,sans-serif" font-size="31" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">Service</text>
+<polyline points="300,344 390,344" fill="none" stroke="#294660" stroke-width="3"/>
+<polygon points="390,344 376.0,337.0 376.0,351.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<rect x="390" y="306" width="1150" height="76" fill="white" stroke="#294660" stroke-width="3"/>
+<text x="965.0" y="330.0" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">StoryGraphService · StoryGraphServiceImpl · ProjectAccessService</text>
+<rect x="60" y="404" width="240" height="76" fill="#EFE8F7" stroke="#294660" stroke-width="3"/>
+<text x="180.0" y="426.5" font-family="Microsoft YaHei,sans-serif" font-size="31" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">Mapper</text>
+<polyline points="300,442 390,442" fill="none" stroke="#294660" stroke-width="3"/>
+<polygon points="390,442 376.0,435.0 376.0,449.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<rect x="390" y="404" width="1150" height="76" fill="white" stroke="#294660" stroke-width="3"/>
+<text x="965.0" y="428.0" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">StoryNodeMapper · StoryChoiceMapper</text>
+<rect x="60" y="502" width="240" height="76" fill="#DFEDF8" stroke="#294660" stroke-width="3"/>
+<text x="180.0" y="524.5" font-family="Microsoft YaHei,sans-serif" font-size="31" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">Entity</text>
+<polyline points="300,540 390,540" fill="none" stroke="#294660" stroke-width="3"/>
+<polygon points="390,540 376.0,533.0 376.0,547.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<rect x="390" y="502" width="1150" height="76" fill="white" stroke="#294660" stroke-width="3"/>
+<text x="965.0" y="526.0" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">StoryNode · StoryChoice</text>
+</svg>

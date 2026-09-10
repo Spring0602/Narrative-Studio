@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120"><rect width="100%" height="100%" fill="white"/>
+<text x="800" y="25" font-family="Microsoft YaHei,sans-serif" font-size="40" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">（a）账户与项目</text>
+<rect x="60" y="210" width="440" height="169" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="60" y="210" width="440" height="64" fill="#DFEDF8" stroke="#294660" stroke-width="3"/>
+<text x="280" y="227" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">sys_user</text>
+<text x="76" y="288" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">PK id</text>
+<text x="76" y="331" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">UK username</text>
+<rect x="1100" y="210" width="440" height="169" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="1100" y="210" width="440" height="64" fill="#DFEDF8" stroke="#294660" stroke-width="3"/>
+<text x="1320" y="227" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">narrative_project</text>
+<text x="1116" y="288" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">PK id</text>
+<text x="1116" y="331" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK owner_id</text>
+<rect x="580" y="210" width="440" height="255" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="580" y="210" width="440" height="64" fill="#DFEDF8" stroke="#294660" stroke-width="3"/>
+<text x="800" y="227" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">project_member</text>
+<text x="596" y="288" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">PK id</text>
+<text x="596" y="331" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK user_id</text>
+<text x="596" y="374" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK project_id</text>
+<text x="596" y="417" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">UK (project_id, user_id)</text>
+<rect x="60" y="740" width="440" height="212" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="60" y="740" width="440" height="64" fill="#E8F1E1" stroke="#294660" stroke-width="3"/>
+<text x="280" y="757" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">world_entry</text>
+<text x="76" y="818" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">PK id</text>
+<text x="76" y="861" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK project_id</text>
+<text x="76" y="904" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">entry_type / title</text>
+<rect x="1100" y="740" width="440" height="212" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="1100" y="740" width="440" height="64" fill="#FFF1CC" stroke="#294660" stroke-width="3"/>
+<text x="1320" y="757" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">detected_issue</text>
+<text x="1116" y="818" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">PK id</text>
+<text x="1116" y="861" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">FK project_id</text>
+<text x="1116" y="904" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">issue_type / target_id</text>
+<polyline points="280,210 280,130 1320,130 1320,210" fill="none" stroke="#294660" stroke-width="3"/>
+<text x="300" y="170" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">1</text>
+<text x="1340" y="170" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">0..*</text>
+<text x="800" y="87" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">创建者 owner_id</text>
+<polyline points="500,290 580,290" fill="none" stroke="#294660" stroke-width="3"/>
+<text x="510" y="254" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">1</text>
+<text x="516" y="300" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">0..*</text>
+<polyline points="1100,290 1020,290" fill="none" stroke="#294660" stroke-width="3"/>
+<text x="1074" y="254" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">1</text>
+<text x="1030" y="300" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">0..*</text>
+<polyline points="1400,379 1400,740" fill="none" stroke="#294660" stroke-width="3"/>
+<text x="1412" y="391" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">1</text>
+<text x="1412" y="701" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">0..*</text>
+<polyline points="1180,379 1180,620 280,620 280,740" fill="none" stroke="#294660" stroke-width="3"/>
+<text x="1192" y="391" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">1</text>
+<text x="292" y="701" font-family="Microsoft YaHei,sans-serif" font-size="25" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">0..*</text>
+<text x="800" y="995" font-family="Microsoft YaHei,sans-serif" font-size="30" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">PK：主键；FK：外键；UK：唯一约束。</text>
+<text x="800" y="1042" font-family="Microsoft YaHei,sans-serif" font-size="29" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">1、0..1、0..* 分别表示一、零或一、零至多。</text>
+</svg>

@@ -1,3 +1,4 @@
+-- Navicat 执行入口 2/2：schema.sql 执行完成后，再按需运行本文件。
 USE narrative_studio;
 -- 先通过页面注册账户并创建项目，再将下面的变量替换为实际 ID 后执行。
 SET @project_id = 1;
