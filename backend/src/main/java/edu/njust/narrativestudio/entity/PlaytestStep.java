@@ -7,6 +7,12 @@ import java.time.LocalDateTime;
 
 @TableName("playtest_step")
 public class PlaytestStep {
+    private String knowledgeBefore;
+    public String getKnowledgeBefore() { return knowledgeBefore; }
+    public void setKnowledgeBefore(String value) { knowledgeBefore=value; }
+    private String knowledgeAfter;
+    public String getKnowledgeAfter() { return knowledgeAfter; }
+    public void setKnowledgeAfter(String value) { knowledgeAfter=value; }
     @TableId(type = IdType.AUTO)
     private Long id;
     private Long sessionId;

@@ -28,12 +28,17 @@ public class StoryGraphServiceImpl implements StoryGraphService {
     private final StoryNodeMapper nodeMapper;
     private final StoryChoiceMapper choiceMapper;
     private final ProjectAccessService accessService;
+    private final edu.njust.narrativestudio.service.ReleaseService releases;
+    private final edu.njust.narrativestudio.service.ProjectMutationGuard guard;
 
     public StoryGraphServiceImpl(StoryNodeMapper nodeMapper, StoryChoiceMapper choiceMapper,
-                                 ProjectAccessService accessService) {
+                                 ProjectAccessService accessService,edu.njust.narrativestudio.service.ReleaseService releases,
+                                 edu.njust.narrativestudio.service.ProjectMutationGuard guard) {
         this.nodeMapper = nodeMapper;
         this.choiceMapper = choiceMapper;
         this.accessService = accessService;
+        this.releases = releases;
+        this.guard=guard;
     }
 
     @Override
@@ -60,6 +65,7 @@ public class StoryGraphServiceImpl implements StoryGraphService {
     @Transactional
     public StoryGraphDtos.NodeSummary createNode(Long userId, Long projectId,
                                                   StoryGraphDtos.NodeRequest request) {
+        guard.editor(userId,projectId);
         accessService.requireEditor(userId, projectId);
         validateNodeKeyUnique(projectId, request.nodeKey().trim(), null);
         validateStart(projectId, null, request);
@@ -77,6 +83,7 @@ public class StoryGraphServiceImpl implements StoryGraphService {
     @Transactional
     public StoryGraphDtos.NodeSummary updateNode(Long userId, Long projectId, Long nodeId,
                                                   StoryGraphDtos.NodeRequest request) {
+        guard.editor(userId,projectId);
         accessService.requireEditor(userId, projectId);
         StoryNode node = requireNode(projectId, nodeId);
         validateNodeKeyUnique(projectId, request.nodeKey().trim(), nodeId);
@@ -93,8 +100,10 @@ public class StoryGraphServiceImpl implements StoryGraphService {
     @Override
     @Transactional
     public void deleteNode(Long userId, Long projectId, Long nodeId) {
+        guard.editor(userId,projectId);
         accessService.requireEditor(userId, projectId);
         requireNode(projectId, nodeId);
+        releases.requireUnpublished(projectId,nodeId,true);
         Long incoming = choiceMapper.selectCount(new LambdaQueryWrapper<StoryChoice>()
                 .eq(StoryChoice::getProjectId, projectId)
                 .eq(StoryChoice::getTargetNodeId, nodeId));
@@ -108,6 +117,7 @@ public class StoryGraphServiceImpl implements StoryGraphService {
     @Transactional
     public void updatePositions(Long userId, Long projectId,
                                 StoryGraphDtos.BatchPositionsRequest request) {
+        guard.editor(userId,projectId);
         accessService.requireEditor(userId, projectId);
         Set<Long> ids = new HashSet<>();
         for (StoryGraphDtos.PositionItem item : request.positions()) {
@@ -145,6 +155,7 @@ public class StoryGraphServiceImpl implements StoryGraphService {
     @Transactional
     public StoryGraphDtos.ChoiceSummary createChoice(Long userId, Long projectId, Long sourceNodeId,
                                                       StoryGraphDtos.ChoiceRequest request) {
+        guard.editor(userId,projectId);
         accessService.requireEditor(userId, projectId);
         StoryNode source = requireNode(projectId, sourceNodeId);
         requireNode(projectId, request.targetNodeId());
@@ -164,6 +175,7 @@ public class StoryGraphServiceImpl implements StoryGraphService {
     @Transactional
     public StoryGraphDtos.ChoiceSummary updateChoice(Long userId, Long projectId, Long sourceNodeId,
                                                       Long choiceId, StoryGraphDtos.ChoiceRequest request) {
+        guard.editor(userId,projectId);
         accessService.requireEditor(userId, projectId);
         StoryNode source = requireNode(projectId, sourceNodeId);
         if ("ENDING".equals(source.getNodeType())) throw conflict("结局节点不能包含选择");
@@ -178,9 +190,11 @@ public class StoryGraphServiceImpl implements StoryGraphService {
     @Override
     @Transactional
     public void deleteChoice(Long userId, Long projectId, Long sourceNodeId, Long choiceId) {
+        guard.editor(userId,projectId);
         accessService.requireEditor(userId, projectId);
         requireNode(projectId, sourceNodeId);
         requireChoice(projectId, sourceNodeId, choiceId);
+        releases.requireUnpublished(projectId,choiceId,false);
         choiceMapper.deleteById(choiceId);
     }
 

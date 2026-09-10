@@ -12,6 +12,8 @@ export interface PlaytestSession {
   currentNode: PlaytestNode
   stepNo: number
   state: StateSnapshot
+  releaseId?: number
+  knowledge: StateSnapshot
   availableChoices: PlaytestChoice[]
   deadEnd: boolean
   startedAt: string
@@ -24,6 +26,8 @@ export interface PlaytestStep {
   choiceId?: number
   stateBefore: StateSnapshot
   stateAfter: StateSnapshot
+  knowledgeBefore: StateSnapshot
+  knowledgeAfter: StateSnapshot
   createdAt: string
 }
 export interface Page<T> { items: T[]; page: number; size: number; total: number; pages: number }
@@ -31,6 +35,11 @@ const base = (projectId: number) => `/projects/${projectId}/playtests`
 
 export async function startPlaytest(projectId: number) {
   return (await http.post<ApiEnvelope<PlaytestSession>>(base(projectId))).data.data
+}
+export async function startReleasedPlaytest(projectId: number, releaseId: number) {
+  return (await http.post<ApiEnvelope<PlaytestSession>>(
+    `/projects/${projectId}/releases/${releaseId}/playtests`,
+  )).data.data
 }
 export async function listPlaytests(projectId: number, page = 1, size = 20) {
   return (await http.get<ApiEnvelope<Page<PlaytestSession>>>(base(projectId), { params: { page, size } })).data.data

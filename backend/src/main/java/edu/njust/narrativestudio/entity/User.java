@@ -7,6 +7,15 @@ import java.time.LocalDateTime;
 
 @TableName("sys_user")
 public class User {
+    private String email;
+    public String getEmail() { return email; }
+    public void setEmail(String value) { email=value; }
+    private LocalDateTime emailVerifiedAt;
+    public LocalDateTime getEmailVerifiedAt() { return emailVerifiedAt; }
+    public void setEmailVerifiedAt(LocalDateTime value) { emailVerifiedAt=value; }
+    private Long tokenVersion;
+    public Long getTokenVersion() { return tokenVersion; }
+    public void setTokenVersion(Long value) { tokenVersion=value; }
     @TableId(type = IdType.AUTO)
     private Long id;
     private String username;

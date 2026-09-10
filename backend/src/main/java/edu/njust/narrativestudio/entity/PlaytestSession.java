@@ -7,6 +7,9 @@ import java.time.LocalDateTime;
 
 @TableName("playtest_session")
 public class PlaytestSession {
+    private Long releaseId;
+    public Long getReleaseId() { return releaseId; }
+    public void setReleaseId(Long value) { releaseId=value; }
     @TableId(type = IdType.AUTO)
     private Long id;
     private Long projectId;

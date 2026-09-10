@@ -22,10 +22,14 @@ public class JwtService {
     }
 
     public String createToken(Long userId, String username) {
+        return createToken(userId,username,0L);
+    }
+    public String createToken(Long userId,String username,Long version) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(userId.toString())
                 .claim("username", username)
+                .claim("tokenVersion",version==null?0L:version)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusSeconds(expirationSeconds)))
                 .signWith(key)
@@ -35,8 +39,9 @@ public class JwtService {
     public AuthenticatedUser parse(String token) {
         Claims claims = Jwts.parser().verifyWith(key).build()
                 .parseSignedClaims(token).getPayload();
-        return new AuthenticatedUser(Long.valueOf(claims.getSubject()), claims.get("username", String.class));
+        Number version=claims.get("tokenVersion",Number.class);
+        return new AuthenticatedUser(Long.valueOf(claims.getSubject()), claims.get("username", String.class),version==null?0:version.longValue());
     }
 
-    public record AuthenticatedUser(Long userId, String username) {}
+    public record AuthenticatedUser(Long userId, String username,long tokenVersion) {}
 }

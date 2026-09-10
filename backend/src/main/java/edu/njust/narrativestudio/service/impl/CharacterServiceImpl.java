@@ -16,10 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class CharacterServiceImpl implements CharacterService {
     private final CharacterProfileMapper characterMapper;
     private final ProjectAccessService accessService;
+    private final edu.njust.narrativestudio.service.ProjectMutationGuard guard;
 
-    public CharacterServiceImpl(CharacterProfileMapper characterMapper, ProjectAccessService accessService) {
+    public CharacterServiceImpl(CharacterProfileMapper characterMapper, ProjectAccessService accessService,edu.njust.narrativestudio.service.ProjectMutationGuard guard) {
         this.characterMapper = characterMapper;
         this.accessService = accessService;
+        this.guard=guard;
     }
 
     @Override
@@ -41,6 +43,7 @@ public class CharacterServiceImpl implements CharacterService {
     @Override
     @Transactional
     public CharacterDtos.Summary create(Long userId, Long projectId, CharacterDtos.SaveRequest request) {
+        guard.editor(userId,projectId);
         accessService.requireEditor(userId, projectId);
         LocalDateTime now = LocalDateTime.now();
         CharacterProfile character = new CharacterProfile();
@@ -57,6 +60,7 @@ public class CharacterServiceImpl implements CharacterService {
     @Transactional
     public CharacterDtos.Summary update(Long userId, Long projectId, Long characterId,
                                         CharacterDtos.SaveRequest request) {
+        guard.editor(userId,projectId);
         accessService.requireEditor(userId, projectId);
         CharacterProfile character = requireCharacter(projectId, characterId);
         apply(character, request);
@@ -68,6 +72,7 @@ public class CharacterServiceImpl implements CharacterService {
     @Override
     @Transactional
     public void delete(Long userId, Long projectId, Long characterId) {
+        guard.editor(userId,projectId);
         accessService.requireEditor(userId, projectId);
         CharacterProfile character = requireCharacter(projectId, characterId);
         character.setStatus("DELETED");

@@ -55,7 +55,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private AuthDtos.AuthResponse response(User user) {
-        return new AuthDtos.AuthResponse(jwtService.createToken(user.getId(), user.getUsername()),
+        return new AuthDtos.AuthResponse(jwtService.createToken(user.getId(), user.getUsername(),user.getTokenVersion()),
                 user.getId(), user.getUsername(), user.getDisplayName());
     }
 }

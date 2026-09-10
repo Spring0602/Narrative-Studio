@@ -21,7 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(properties={
     "spring.datasource.url=jdbc:h2:mem:week3;MODE=MySQL;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000",
     "spring.datasource.driver-class-name=org.h2.Driver","spring.datasource.username=sa","spring.datasource.password=",
-    "spring.sql.init.mode=always","spring.sql.init.schema-locations=classpath:week3-schema.sql",
+    "spring.sql.init.mode=always","spring.sql.init.schema-locations=classpath:week3-schema.sql,classpath:database-extension-test.sql",
     "debug=false","logging.level.root=WARN","logging.level.org.springframework=ERROR"
 })
 @AutoConfigureMockMvc

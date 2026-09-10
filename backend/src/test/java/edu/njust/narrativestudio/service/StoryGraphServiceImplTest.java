@@ -30,7 +30,9 @@ class StoryGraphServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        service = new StoryGraphServiceImpl(nodeMapper, choiceMapper, accessService);
+        service = new StoryGraphServiceImpl(nodeMapper, choiceMapper, accessService,
+            org.mockito.Mockito.mock(edu.njust.narrativestudio.service.ReleaseService.class),
+            org.mockito.Mockito.mock(edu.njust.narrativestudio.service.ProjectMutationGuard.class));
     }
 
     @Test

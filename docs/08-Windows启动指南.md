@@ -38,10 +38,11 @@ npm run dev
 ### 使用 Navicat 初始化数据库
 
 1. 在 Navicat 中创建 MySQL 连接。
-2. 打开 `database/schema.sql` 并执行全部语句。
-3. 如需演示数据，再执行 `database/demo_story.sql`。
-4. 确认生成 `narrative_studio` 数据库和 17 张业务表。
-5. 根据连接信息设置后端的 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD`。
+2. 先读 `database/database-design/README.md`，区分已有17表库、已有20表库和全新测试库；执行前备份。
+3. 当前后端需要基线加扩展共20表。已有扩展不可重复执行；测试库需修改基线副本中的 CREATE DATABASE/USE，避免误操作业务库。
+4. 示例剧情脚本需先有账号和项目并修改 project_id，仍不是完整10节点2结局演示数据。
+5. 在启动窗口/IDE 设置 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 指向已验证库；仓库 .env 不会自动加载。启动时会只读检查扩展列。
+6. 邮件可选配置和接口联调见 [数据库接口补全说明](12-数据库接口补全与联调说明.md)。没有 SMTP 不影响普通登录和项目功能，但申请邮件操作返回503。
 
 ### 3306 端口被占用
 
@@ -65,7 +66,7 @@ npm run dev
 
 ```powershell
 cd backend
-..\..\Users\34107\.maven\maven-3.9.15\bin\mvn.cmd -f .\pom.xml clean test
+mvn -f .\pom.xml clean test
 ```
 
 - 在 JDK 25 下，Mockito 可能会输出关于动态 agent 的警告（构建仍然通过）。如果未来 JDK 版本禁止动态加载 agent，可按 Mockito 文档将其作为 JVM agent 添加到构建/测试配置中。

@@ -16,10 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class WorldEntryServiceImpl implements WorldEntryService {
     private final WorldEntryMapper entryMapper;
     private final ProjectAccessService accessService;
+    private final edu.njust.narrativestudio.service.ProjectMutationGuard guard;
 
-    public WorldEntryServiceImpl(WorldEntryMapper entryMapper, ProjectAccessService accessService) {
+    public WorldEntryServiceImpl(WorldEntryMapper entryMapper, ProjectAccessService accessService,edu.njust.narrativestudio.service.ProjectMutationGuard guard) {
         this.entryMapper = entryMapper;
         this.accessService = accessService;
+        this.guard=guard;
     }
 
     @Override
@@ -41,6 +43,7 @@ public class WorldEntryServiceImpl implements WorldEntryService {
     @Override
     @Transactional
     public WorldEntryDtos.Summary create(Long userId, Long projectId, WorldEntryDtos.SaveRequest request) {
+        guard.editor(userId,projectId);
         accessService.requireEditor(userId, projectId);
         LocalDateTime now = LocalDateTime.now();
         WorldEntry entry = new WorldEntry();
@@ -56,6 +59,7 @@ public class WorldEntryServiceImpl implements WorldEntryService {
     @Transactional
     public WorldEntryDtos.Summary update(Long userId, Long projectId, Long entryId,
                                          WorldEntryDtos.SaveRequest request) {
+        guard.editor(userId,projectId);
         accessService.requireEditor(userId, projectId);
         WorldEntry entry = requireEntry(projectId, entryId);
         apply(entry, request);
@@ -67,6 +71,7 @@ public class WorldEntryServiceImpl implements WorldEntryService {
     @Override
     @Transactional
     public void delete(Long userId, Long projectId, Long entryId) {
+        guard.editor(userId,projectId);
         accessService.requireEditor(userId, projectId);
         requireEntry(projectId, entryId);
         entryMapper.deleteById(entryId);

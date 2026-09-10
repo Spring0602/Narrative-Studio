@@ -1,6 +1,7 @@
 package edu.njust.narrativestudio.service;
 import edu.njust.narrativestudio.dto.PlaytestDtos.*;
 public interface PlaytestService {
+    SessionView startRelease(Long user,Long project,Long release);
     SessionView start(Long user,Long project);
     SessionView get(Long user,Long project,Long session);
     SessionView advance(Long user,Long project,Long session,Long choice,int expectedStepNo);

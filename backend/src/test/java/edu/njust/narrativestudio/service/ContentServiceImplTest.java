@@ -32,8 +32,8 @@ class ContentServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        worldEntryService = new WorldEntryServiceImpl(worldEntryMapper, accessService);
-        characterService = new CharacterServiceImpl(characterMapper, accessService);
+        worldEntryService = new WorldEntryServiceImpl(worldEntryMapper, accessService,org.mockito.Mockito.mock(ProjectMutationGuard.class));
+        characterService = new CharacterServiceImpl(characterMapper, accessService,org.mockito.Mockito.mock(ProjectMutationGuard.class));
     }
 
     @Test
