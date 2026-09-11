@@ -1,202 +1,162 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
-import { useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import type {
-  EditableMemberRole,
-  MemberRole,
-  MemberSummary,
-} from '@/api/members'
+import { computed, onMounted, reactive, ref } from "vue";
+import { useRoute } from "vue-router";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { apiErrorMessage } from "@/api/errors";
+import {
+  addMember,
+  listMembers,
+  removeMember,
+  updateMemberRole,
+  type EditableMemberRole,
+  type MemberRole,
+  type MemberSummary,
+} from "@/api/members";
 
-const route = useRoute()
-const isPreviewRoute = computed(() => import.meta.env.DEV && route.path.startsWith('/preview/'))
+const props = defineProps<{
+  currentUserRole: MemberRole;
+  projectStatus: "ACTIVE" | "ARCHIVED";
+}>();
 
-// TODO(B): 后端联调后删除 mock 数据，改用 listMembers() 获取真实成员
-const initialMockMembers: MemberSummary[] = [
-  {
-    id: 1,
-    userId: 1,
-    username: 'owner',
-    displayName: '项目创建者',
-    memberRole: 'OWNER',
-    joinedAt: '2026-09-09 10:00',
-  },
-  {
-    id: 2,
-    userId: 2,
-    username: 'writer01',
-    displayName: '剧情编辑',
-    memberRole: 'EDITOR',
-    joinedAt: '2026-09-09 11:00',
-  },
-]
+const route = useRoute();
+const projectId = computed(() => Number(route.params.id));
+const members = ref<MemberSummary[]>([]);
+const canManageMembers = computed(
+  () => props.currentUserRole === "OWNER" && props.projectStatus === "ACTIVE",
+);
+const readOnlyReason = computed(() =>
+  props.projectStatus === "ARCHIVED" ? "项目已归档" : "仅项目创建者可管理成员",
+);
 
-function createMockMembers() {
-  return initialMockMembers.map((member) => ({ ...member }))
-}
-
-const members = ref<MemberSummary[]>(createMockMembers())
-
-// TODO(B): 后端联调后从真实项目数据中读取当前用户角色，并删除开发状态预览工具
-const currentUserRole = ref<MemberRole>('OWNER')
-const canManageMembers = computed(() => currentUserRole.value === 'OWNER')
-
-const loading = ref(false)
-const loadError = ref('')
-const saving = ref(false)
-const operatingMemberId = ref<number | null>(null)
+const loading = ref(false);
+const loadError = ref("");
+const saving = ref(false);
+const operatingMemberId = ref<number | null>(null);
 const isOperating = computed(
   () => saving.value || operatingMemberId.value !== null,
-)
+);
 
-const dialogVisible = ref(false)
+const dialogVisible = ref(false);
 const form = reactive<{ username: string; memberRole: EditableMemberRole }>({
-  username: '',
-  memberRole: 'EDITOR',
-})
-let nextMemberId = 3
+  username: "",
+  memberRole: "EDITOR",
+});
 
-function wait(milliseconds: number) {
-  return new Promise<void>((resolve) => window.setTimeout(resolve, milliseconds))
-}
-
-function restoreMockMembers() {
-  members.value = createMockMembers()
-  nextMemberId = 3
-  loading.value = false
-  loadError.value = ''
+async function load() {
+  if (!Number.isFinite(projectId.value)) {
+    loadError.value = "项目编号无效。";
+    return;
+  }
+  loading.value = true;
+  loadError.value = "";
+  try {
+    members.value = await listMembers(projectId.value);
+  } catch (error) {
+    loadError.value = apiErrorMessage(
+      error,
+      "无法获取项目成员，请检查后端服务后重试。",
+    );
+  } finally {
+    loading.value = false;
+  }
 }
 
 function openAddDialog() {
   if (!canManageMembers.value) {
-    ElMessage.warning('当前角色没有成员管理权限')
-    return
+    ElMessage.warning(readOnlyReason.value);
+    return;
   }
-  form.username = ''
-  form.memberRole = 'EDITOR'
-  dialogVisible.value = true
+  form.username = "";
+  form.memberRole = "EDITOR";
+  dialogVisible.value = true;
 }
 
-async function addMockMember() {
-  if (!canManageMembers.value || saving.value) return
+async function add() {
+  if (!canManageMembers.value || saving.value) return;
+  const username = form.username.trim();
+  if (!username) return void ElMessage.warning("请输入用户名");
 
-  const username = form.username.trim()
-  if (!username) {
-    ElMessage.warning('请输入用户名')
-    return
-  }
-  if (members.value.some((member) => member.username === username)) {
-    ElMessage.warning('该用户已在成员列表中')
-    return
-  }
-
-  saving.value = true
+  saving.value = true;
   try {
-    await wait(400)
-    members.value.push({
-      id: nextMemberId,
-      userId: nextMemberId,
+    const created = await addMember(projectId.value, {
       username,
-      displayName: '未设置',
       memberRole: form.memberRole,
-      joinedAt: new Date().toLocaleString('zh-CN', { hour12: false }),
-    })
-    nextMemberId += 1
-    dialogVisible.value = false
-    ElMessage.success('成员已添加（mock 数据）')
+    });
+    members.value.push(created);
+    dialogVisible.value = false;
+    ElMessage.success("成员已添加并保存");
+  } catch (error) {
+    ElMessage.error(apiErrorMessage(error, "添加成员失败"));
   } finally {
-    saving.value = false
+    saving.value = false;
   }
 }
 
-async function updateMockMemberRole(member: MemberSummary) {
-  if (!canManageMembers.value || operatingMemberId.value !== null) return
-  if (member.memberRole === 'OWNER') {
-    ElMessage.warning('不能修改项目创建者的角色')
-    return
-  }
-
-  operatingMemberId.value = member.id
+async function changeRole(member: MemberSummary, role: EditableMemberRole) {
+  if (!canManageMembers.value || operatingMemberId.value !== null) return;
+  operatingMemberId.value = member.id;
   try {
-    await wait(350)
-    ElMessage.success(
-      `${member.username} 的角色已修改为 ${member.memberRole}（mock 数据）`,
-    )
+    const updated = await updateMemberRole(projectId.value, member.id, {
+      memberRole: role,
+    });
+    const index = members.value.findIndex((item) => item.id === member.id);
+    if (index !== -1) members.value[index] = updated;
+    ElMessage.success(`${member.username} 的角色已保存`);
+  } catch (error) {
+    ElMessage.error(apiErrorMessage(error, "修改成员角色失败"));
+    await load();
   } finally {
-    operatingMemberId.value = null
+    operatingMemberId.value = null;
   }
 }
 
-async function removeMockMember(member: MemberSummary) {
-  if (!canManageMembers.value || operatingMemberId.value !== null) return
-  if (member.memberRole === 'OWNER') {
-    ElMessage.warning('不能移除项目创建者')
-    return
-  }
-
+async function remove(member: MemberSummary) {
+  if (!canManageMembers.value || operatingMemberId.value !== null) return;
+  if (member.memberRole === "OWNER")
+    return void ElMessage.warning("不能移除项目创建者");
   try {
     await ElMessageBox.confirm(
       `确定要移除成员 ${member.username} 吗？`,
-      '移除成员',
+      "移除成员",
       {
-        confirmButtonText: '确定移除',
-        cancelButtonText: '取消',
-        type: 'warning',
+        confirmButtonText: "确定移除",
+        cancelButtonText: "取消",
+        type: "warning",
       },
-    )
+    );
   } catch {
-    return
+    return;
   }
 
-  operatingMemberId.value = member.id
+  operatingMemberId.value = member.id;
   try {
-    await wait(400)
-    members.value = members.value.filter((item) => item.id !== member.id)
-    ElMessage.success('成员已移除（mock 数据）')
+    await removeMember(projectId.value, member.id);
+    members.value = members.value.filter((item) => item.id !== member.id);
+    ElMessage.success("成员已移除");
+  } catch (error) {
+    ElMessage.error(apiErrorMessage(error, "移除成员失败"));
   } finally {
-    operatingMemberId.value = null
+    operatingMemberId.value = null;
   }
 }
 
-async function showLoadingState() {
-  loadError.value = ''
-  loading.value = true
-  await wait(1200)
-  loading.value = false
-}
-
-function showEmptyState() {
-  loading.value = false
-  loadError.value = ''
-  members.value = []
-}
-
-function showErrorState() {
-  loading.value = false
-  loadError.value = '无法获取项目成员，请检查网络连接后重试。'
-}
-
-async function retryMockLoad() {
-  loadError.value = ''
-  loading.value = true
-  await wait(700)
-  restoreMockMembers()
-  ElMessage.success('成员列表已重新加载（mock 数据）')
-}
+onMounted(load);
 </script>
 
 <template>
-  <el-result
-    v-if="!isPreviewRoute"
-    icon="info"
-    title="成员管理待联调"
-    sub-title="成员管理原型仅在开发预览中开放，当前页面不会修改项目成员。"
-  />
-  <section v-else class="member-page">
+  <section class="member-page">
     <div class="member-heading">
       <div>
         <p class="eyebrow">MEMBERS</p>
-        <h1>项目成员</h1>
+        <div class="heading-title-row">
+          <img
+            class="page-heading-icon"
+            src="../assets/icons/profile-card.png"
+            alt=""
+            aria-hidden="true"
+          />
+          <h1>项目成员</h1>
+        </div>
         <p class="muted">查看和管理参与当前剧情项目的用户。</p>
       </div>
       <el-button
@@ -210,26 +170,6 @@ async function retryMockLoad() {
       </el-button>
     </div>
 
-    <div v-if="isPreviewRoute" class="preview-tools">
-      <div>
-        <strong>开发状态预览</strong>
-        <span>仅用于在后端接入前测试权限和页面状态。</span>
-      </div>
-      <div class="preview-controls">
-        <el-select v-model="currentUserRole" class="preview-role">
-          <el-option label="OWNER" value="OWNER" />
-          <el-option label="EDITOR" value="EDITOR" />
-          <el-option label="TESTER" value="TESTER" />
-        </el-select>
-        <el-button @click="restoreMockMembers">正常</el-button>
-        <el-button @click="showLoadingState">加载中</el-button>
-        <el-button @click="showEmptyState">空数据</el-button>
-        <el-button type="danger" plain @click="showErrorState">
-          加载失败
-        </el-button>
-      </div>
-    </div>
-
     <el-result
       v-if="loadError"
       icon="error"
@@ -238,7 +178,7 @@ async function retryMockLoad() {
       class="load-result"
     >
       <template #extra>
-        <el-button type="primary" :loading="loading" @click="retryMockLoad">
+        <el-button type="primary" :loading="loading" @click="load">
           重新加载
         </el-button>
       </template>
@@ -264,11 +204,11 @@ async function retryMockLoad() {
 
           <el-select
             v-else
-            v-model="row.memberRole"
+            :model-value="row.memberRole"
             size="small"
             class="role-select"
             :disabled="isOperating"
-            @change="updateMockMemberRole(row)"
+            @change="changeRole(row, $event)"
           >
             <el-option label="编辑者（EDITOR）" value="EDITOR" />
             <el-option label="测试者（TESTER）" value="TESTER" />
@@ -282,7 +222,7 @@ async function retryMockLoad() {
             v-if="row.memberRole === 'OWNER' || !canManageMembers"
             class="protected-text"
           >
-            {{ row.memberRole === 'OWNER' ? '不可移除' : '无管理权限' }}
+            {{ row.memberRole === "OWNER" ? "不可移除" : "无管理权限" }}
           </span>
 
           <el-button
@@ -291,7 +231,7 @@ async function retryMockLoad() {
             link
             :loading="operatingMemberId === row.id"
             :disabled="isOperating && operatingMemberId !== row.id"
-            @click="removeMockMember(row)"
+            @click="remove(row)"
           >
             移除
           </el-button>
@@ -316,7 +256,7 @@ async function retryMockLoad() {
             maxlength="32"
             placeholder="请输入已注册用户的用户名"
             :disabled="saving"
-            @keyup.enter="addMockMember"
+            @keyup.enter="add"
           />
         </el-form-item>
         <el-form-item label="项目角色" required>
@@ -334,7 +274,7 @@ async function retryMockLoad() {
         <el-button :disabled="saving" @click="dialogVisible = false">
           取消
         </el-button>
-        <el-button type="primary" :loading="saving" @click="addMockMember">
+        <el-button type="primary" :loading="saving" @click="add">
           确定添加
         </el-button>
       </template>
