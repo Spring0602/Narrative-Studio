@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { loadAllPages } from "@/api/pagination";
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -513,7 +514,7 @@ const newDraft = reactive({ sourceNodeId: 0, choiceText: "", sortOrder: 0 });
 async function loadDrafts() {
   draftLoading.value = true;
   try {
-    drafts.value = (await listChoiceDrafts(projectId.value)).items;
+    drafts.value = (await loadAllPages((page, size) => listChoiceDrafts(projectId.value, page, size))).items;
   } catch (error) {
     ElMessage.error(apiErrorMessage(error, "选项草稿加载失败"));
   } finally {

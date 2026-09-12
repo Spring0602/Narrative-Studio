@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
     "typecheck": "vue-tsc -b --noEmit",
+    "test": "node --test tests/pagination.test.mjs",
     "format": "prettier --write src"
   },
   "dependencies": {

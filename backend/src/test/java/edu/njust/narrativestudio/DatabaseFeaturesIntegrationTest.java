@@ -30,6 +30,168 @@ import org.springframework.test.web.servlet.MockMvc;
 })
 @AutoConfigureMockMvc
 class DatabaseFeaturesIntegrationTest {
+
+    @Test void tenNodeDemoImportsAndReachesBothEndings() throws Exception {
+        edu.njust.narrativestudio.dto.StoryTransferDtos.Document document;
+        try(var stream=getClass().getResourceAsStream("/story-transfer-demo.json")) {
+            document=json.readValue(stream,edu.njust.narrativestudio.dto.StoryTransferDtos.Document.class);
+        }
+        var p=transfer.importStory(4L,document);
+        assertEquals(10,graph.getGraph(4L,p.id()).nodes().size());
+        for(int ending=0;ending<2;ending++) {
+            var s=playtests.start(4L,p.id());
+            for(int step=0;step<7;step++) s=playtests.advance(4L,p.id(),s.id(),s.availableChoices().getFirst().id(),s.stepNo());
+            assertEquals(2,s.availableChoices().size());
+            s=playtests.advance(4L,p.id(),s.id(),s.availableChoices().get(ending).id(),s.stepNo());
+            assertEquals("COMPLETED",s.status());assertEquals("50",s.state().get("trust"));
+        }
+        assertEquals(100.0,coverage.get(4L,p.id(),null).coveragePercent());
+    }
+
+    @Test void referencedCharacterCannotBeSoftDeletedAndNullableFieldsClear() {
+        var payload=new edu.njust.narrativestudio.dto.CharacterDtos.SaveRequest("Alice","summary","personality","goal","values");
+        characters.update(1L,10L,11L,payload);
+        characters.update(1L,10L,11L,new edu.njust.narrativestudio.dto.CharacterDtos.SaveRequest("Alice",null,null,null,null));
+        assertNull(characters.get(1L,10L,11L).summary());
+        assertNull(characters.get(1L,10L,11L).personality());
+        details.replaceCast(1L,10L,101L,new CastRequest(List.of(11L)));
+        assertThrows(BusinessException.class,()->characters.delete(1L,10L,11L));
+        assertEquals("ACTIVE",characters.get(1L,10L,11L).status());
+        details.replaceCast(1L,10L,101L,new CastRequest(List.of()));
+        characters.delete(1L,10L,11L);
+        assertThrows(BusinessException.class,()->characters.get(1L,10L,11L));
+    }
+    @Test void fullAnalysisIncludingPersistenceMeetsLocalBudget() {
+        db.update("DELETE FROM choice_condition");db.update("DELETE FROM state_effect");db.update("DELETE FROM story_choice WHERE project_id=10");
+        db.update("UPDATE story_node SET node_type='NORMAL' WHERE project_id=10");
+        for(int i=0;i<497;i++) db.update("INSERT INTO story_node(project_id,node_key,title,node_type,is_start) VALUES(10,?,?,'NORMAL',0)","perf"+i,"Node "+i);
+        var nodes=graph.getGraph(1L,10L).nodes();
+        for(int i=0;i<500;i++) for(int offset:List.of(1,7))
+            db.update("INSERT INTO story_choice(project_id,source_node_id,target_node_id,choice_text,enabled) VALUES(10,?,?,'Next',1)",
+                    nodes.get(i).id(),nodes.get((i+offset)%500).id());
+        long start=System.nanoTime();
+        assertEquals(500,issues.analyze(1L,10L).stream().filter(x->"CYCLE".equals(x.getIssueType())).count());
+        double ms=(System.nanoTime()-start)/1e6;
+        System.out.printf("H2 analysis + issue persistence 500 nodes / 1000 edges: %.2f ms%n",ms);
+        assertTrue(ms<2000,"Local H2 analysis exceeded 2s: "+ms);
+    }
+    @Test void localCrudHttpPipelineP95MeetsBudget() throws Exception {
+        String bearer="Bearer "+jwt.createToken(1L,"user1");
+        String body="{\"entryType\":\"SETTING\",\"title\":\"Perf\",\"content\":\"Fixture\",\"sortOrder\":0}";
+        List<Double> samples=new ArrayList<>();
+        for(int i=0;i<30;i++) {
+            long start=System.nanoTime();
+            var result=mvc.perform(post("/api/projects/10/world-entries").header("Authorization",bearer).contentType("application/json").content(body))
+                    .andExpect(status().isOk()).andReturn();
+            if(i>=5) samples.add((System.nanoTime()-start)/1e6);
+            long id=json.readTree(result.getResponse().getContentAsString()).path("data").path("id").asLong();
+            start=System.nanoTime();
+            mvc.perform(get("/api/projects/10/world-entries/"+id).header("Authorization",bearer)).andExpect(status().isOk());
+            if(i>=5) samples.add((System.nanoTime()-start)/1e6);
+            start=System.nanoTime();
+            mvc.perform(put("/api/projects/10/world-entries/"+id).header("Authorization",bearer).contentType("application/json").content(body)).andExpect(status().isOk());
+            if(i>=5) samples.add((System.nanoTime()-start)/1e6);
+            start=System.nanoTime();
+            mvc.perform(delete("/api/projects/10/world-entries/"+id).header("Authorization",bearer)).andExpect(status().isOk());
+            if(i>=5) samples.add((System.nanoTime()-start)/1e6);
+        }
+        Collections.sort(samples);double p95=samples.get(94);
+        System.out.printf("H2 + MockMvc CRUD 20 warmup / 100 measured requests P95: %.2f ms%n",p95);
+        assertTrue(p95<500,"Local CRUD P95 exceeded 500ms: "+p95);
+    }
+
+    @Autowired StoryTransferService transfer;
+    @Autowired EndingCoverageService coverage;
+    @Autowired ProjectService projects;
+    @Autowired CharacterService characters;
+    @Autowired com.fasterxml.jackson.databind.ObjectMapper json;
+
+    @Test void portableStoryRoundTripRemapsIdsAndPreservesExecutableRules() {
+        var exported=transfer.exportStory(1L,10L);
+        var imported=transfer.importStory(4L,exported);
+        assertNotEquals(10L,imported.id());
+        assertEquals("OWNER",imported.memberRole());
+        assertEquals(exported,transfer.exportStory(4L,imported.id()));
+        var g=graph.getGraph(4L,imported.id());
+        var s=playtests.start(4L,imported.id());
+        var first=g.choices().stream().filter(c->c.choiceText().equals("Add trust")).findFirst().orElseThrow();
+        var second=g.choices().stream().filter(c->c.choiceText().equals("Hidden ending")).findFirst().orElseThrow();
+        playtests.advance(4L,imported.id(),s.id(),first.id(),0);
+        assertEquals("COMPLETED",playtests.advance(4L,imported.id(),s.id(),second.id(),1).status());
+    }
+    @Test void invalidImportRollsBackNewProjectAndAllChildren() {
+        var original=transfer.exportStory(1L,10L);
+        var invalid=new edu.njust.narrativestudio.dto.StoryTransferDtos.Choice("start","missing","Broken",0,true,List.of(),List.of());
+        var document=new edu.njust.narrativestudio.dto.StoryTransferDtos.Document(1,"Import",null,original.nodes(),original.variables(),List.of(invalid));
+        assertThrows(BusinessException.class,()->transfer.importStory(4L,document));
+        assertTrue(projects.listAccessible(4L).isEmpty());
+        assertEquals(4,db.queryForObject("SELECT COUNT(*) FROM story_node",Integer.class));
+    }
+    @Test void importRejectsUnknownVersionAndNullNestedItems() throws Exception {
+        var tree=json.valueToTree(transfer.exportStory(1L,10L));
+        ((com.fasterxml.jackson.databind.node.ObjectNode)tree).put("schemaVersion",2);
+        String bearer="Bearer "+jwt.createToken(4L,"user4");
+        mvc.perform(post("/api/projects/import").header("Authorization",bearer).contentType("application/json").content(json.writeValueAsString(tree)))
+                .andExpect(status().isBadRequest());
+        ((com.fasterxml.jackson.databind.node.ObjectNode)tree).put("schemaVersion",1);
+        ((com.fasterxml.jackson.databind.node.ArrayNode)tree.get("nodes")).addNull();
+        mvc.perform(post("/api/projects/import").header("Authorization",bearer).contentType("application/json").content(json.writeValueAsString(tree)))
+                .andExpect(status().isBadRequest());
+        assertTrue(projects.listAccessible(4L).isEmpty());
+    }
+    @Test void exportAndCoverageRequireMembership() {
+        assertThrows(BusinessException.class,()->transfer.exportStory(4L,10L));
+        assertThrows(BusinessException.class,()->coverage.get(4L,10L,null));
+    }
+    @Test void coverageCountsOnlyCurrentUserAndSelectedVersion() {
+        var r=releases.publish(1L,10L);
+        var s=playtests.startRelease(2L,10L,r.id());
+        playtests.advance(2L,10L,s.id(),1001L,0);playtests.advance(2L,10L,s.id(),1002L,1);
+        assertEquals(100.0,coverage.get(2L,10L,r.id()).coveragePercent());
+        assertEquals(0,coverage.get(1L,10L,r.id()).totalSessions());
+        assertEquals(0,coverage.get(2L,10L,null).totalSessions());
+        db.update("UPDATE story_node SET title='Edited',node_type='NORMAL' WHERE id=103");
+        var frozen=coverage.get(2L,10L,r.id());
+        assertEquals("End",frozen.endings().getFirst().title());
+        assertEquals(1,frozen.totalEndings());
+        assertEquals(0,coverage.get(2L,10L,null).totalEndings());
+        assertEquals(0.0,coverage.get(2L,10L,null).coveragePercent());
+        assertThrows(BusinessException.class,()->coverage.get(1L,20L,r.id()));
+    }
+    @Test void coverageIncludesAllHistoryBeyondFirstPage() {
+        for(int i=0;i<105;i++) db.update("INSERT INTO playtest_session(project_id,tester_id,status,current_node_id,finished_at) VALUES(10,2,'COMPLETED',103,CURRENT_TIMESTAMP)");
+        var result=coverage.get(2L,10L,null);
+        assertEquals(105,result.totalSessions());assertEquals(105,result.completedSessions());
+        assertEquals(105,result.endings().getFirst().completions());assertEquals(100.0,result.coveragePercent());
+    }
+    @Test void nullableNodeAndProjectFieldsCanBeCleared() {
+        graph.updateNode(1L,10L,101L,new NodeRequest("start","Start","Text","NORMAL","Scene",true,null,null));
+        graph.updateNode(1L,10L,101L,new NodeRequest("start","Start",null,"NORMAL",null,true,null,null));
+        assertNull(graph.getNode(1L,10L,101L).content());assertNull(graph.getNode(1L,10L,101L).scene());
+        projects.update(1L,10L,new edu.njust.narrativestudio.dto.ProjectDtos.UpdateRequest("Test","Description"));
+        projects.update(1L,10L,new edu.njust.narrativestudio.dto.ProjectDtos.UpdateRequest("Test",null));
+        assertNull(projects.getAccessible(1L,10L).description());
+    }
+    @Test void optionalAiDisabledAndConsentAndRoleChecksAreExplicit() throws Exception {
+        String body="{\"nodeId\":101,\"characterId\":11,\"direction\":\"问候\",\"consent\":true}";
+        mvc.perform(post("/api/projects/10/ai/dialogue-candidates").header("Authorization","Bearer "+jwt.createToken(1L,"user1"))
+                .contentType("application/json").content(body)).andExpect(status().isServiceUnavailable()).andExpect(jsonPath("$.error.code").value("AI_UNAVAILABLE"));
+        mvc.perform(post("/api/projects/10/ai/dialogue-candidates").header("Authorization","Bearer "+jwt.createToken(2L,"user2"))
+                .contentType("application/json").content(body)).andExpect(status().isForbidden());
+        mvc.perform(post("/api/projects/10/ai/dialogue-candidates").header("Authorization","Bearer "+jwt.createToken(1L,"user1"))
+                .contentType("application/json").content(body.replace("true","false"))).andExpect(status().isBadRequest());
+        assertEquals(3,graph.getGraph(1L,10L).nodes().size());
+    }
+    @Test void graphRejectsCapacityOverflowWithoutPartialWrites() {
+        for(int i=0;i<497;i++) db.update("INSERT INTO story_node(project_id,node_key,title,node_type,is_start) VALUES(10,?,?,'NORMAL',0)","n"+i,"Node "+i);
+        assertThrows(BusinessException.class,()->graph.createNode(1L,10L,new NodeRequest("overflow","Overflow",null,"NORMAL",null,false,null,null)));
+        assertEquals(500,graph.getGraph(1L,10L).nodes().size());
+    }
+    @Test void registerRejectsPasswordsOverBcryptByteLimit() throws Exception {
+        mvc.perform(post("/api/auth/register").contentType("application/json")
+                .content("{\"username\":\"newuser\",\"displayName\":\"New\",\"password\":\""+ "密".repeat(25)+"\"}"))
+                .andExpect(status().isBadRequest());
+    }
     @Autowired CharacterDetailService details;@Autowired ChoiceDraftService drafts;@Autowired FeedbackService feedback;
     @Autowired ReleaseService releases;@Autowired PlaytestService playtests;@Autowired IssueService issues;
     @Autowired StoryGraphService graph;@Autowired AccountService accounts;@Autowired JdbcTemplate db;

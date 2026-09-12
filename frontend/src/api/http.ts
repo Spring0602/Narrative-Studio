@@ -30,6 +30,7 @@ http.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("narrative_token");
+      localStorage.removeItem("narrative_user");
       if (location.pathname !== "/login") location.href = "/login";
     }
     return Promise.reject(error);

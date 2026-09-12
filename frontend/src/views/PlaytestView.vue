@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { loadAllPages } from "@/api/pagination";
 import axios from "axios";
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
@@ -23,6 +24,7 @@ import { listVariables } from "@/api/rules";
 import { getStoryGraph } from "@/api/storyGraph";
 import {
   listReleases,
+  getRelease,
   publishRelease,
   type ReleaseSummary,
 } from "@/api/releases";
@@ -92,8 +94,8 @@ async function loadPage() {
   loadError.value = "";
   try {
     const [sessionPage, releasePage, variables, graph] = await Promise.all([
-      listPlaytests(projectId.value, 1, 100),
-      listReleases(projectId.value, 1, 100),
+      loadAllPages((page, size) => listPlaytests(projectId.value, page, size)),
+      loadAllPages((page, size) => listReleases(projectId.value, page, size)),
       listVariables(projectId.value),
       getStoryGraph(projectId.value),
     ]);
@@ -130,10 +132,15 @@ async function selectSession(session: PlaytestSession) {
   try {
     const [detail, steps] = await Promise.all([
       getPlaytest(projectId.value, session.id),
-      getPlaytestSteps(projectId.value, session.id, 1, 100),
+      loadAllPages((page, size) => getPlaytestSteps(projectId.value, session.id, page, size), 10001),
     ]);
     currentSession.value = detail;
     currentSteps.value = steps.items;
+    const source = detail.releaseId
+      ? await getRelease(projectId.value, detail.releaseId)
+      : { ...(await getStoryGraph(projectId.value)), variables: await listVariables(projectId.value) };
+    nodeLabels.value = Object.fromEntries(source.nodes.map(node => [node.id, node.title]));
+    variableLabels.value = Object.fromEntries(source.variables.map(variable => [variable.variableKey, variable.displayName]));
   } catch (error) {
     ElMessage.error(apiErrorMessage(error, "模拟会话加载失败"));
   } finally {
@@ -143,7 +150,7 @@ async function selectSession(session: PlaytestSession) {
 async function refreshCurrent() {
   if (!currentSession.value) return;
   await selectSession(currentSession.value);
-  const page = await listPlaytests(projectId.value, 1, 100);
+  const page = await loadAllPages((page, size) => listPlaytests(projectId.value, page, size));
   sessions.value = page.items;
 }
 async function start() {

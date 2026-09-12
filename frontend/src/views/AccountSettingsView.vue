@@ -113,6 +113,7 @@ async function savePassword() {
 }
 function logout() {
   localStorage.removeItem("narrative_token");
+  localStorage.removeItem("narrative_user");
   void router.replace("/login");
 }
 onMounted(load);

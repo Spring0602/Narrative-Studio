@@ -24,6 +24,7 @@ class MemberServiceImplTest {
     @Mock ProjectMemberMapper memberMapper;
     @Mock UserMapper userMapper;
     @Mock ProjectAccessService accessService;
+    @Mock ProjectMutationGuard guard;
     @InjectMocks MemberServiceImpl service;
 
     @Test

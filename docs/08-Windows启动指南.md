@@ -62,6 +62,20 @@ npm run dev
 
 ## 验证与注意事项
 
+### 生产模式
+
+在启动环境明确配置 DB_URL、DB_USERNAME、DB_PASSWORD、JWT_SECRET、CORS_ALLOWED_ORIGIN，并设置 SPRING_PROFILES_ACTIVE=prod。JWT_SECRET至少32字节且不能使用开发默认值，数据库不能使用默认开发密码；缺失配置会阻止启动。不要把真实值写进仓库。
+
+部署时运行构建后的JAR：先在项目根执行 mvn -f backend/pom.xml clean verify，再运行 java -jar backend/target/narrative-studio-backend-0.1.0-SNAPSHOT.jar。前端dist由静态服务器提供，并将/api反向代理至后端、配置history路由回退；Vite开发代理不是生产服务器。
+
+### 可选AI与新增接口
+
+AI默认关闭，不影响核心业务；若需使用，先自行准备可用模型，再配置AI_ENABLED、AI_ENDPOINT、AI_MODEL。具体限制、数据发送同意和测试样例见 [后端收口说明](13-后端收口与整体检查记录.md)。本轮不要求Docker，也不自动安装模型或迁移数据库。
+
+### 测试出现 Unresolved compilation problems
+
+本机曾出现IDE/增量产物与Maven编译结果不一致，表现为JDK25运行时getFirst/getLast不可用。确认mvn -version与IDE运行时均使用JDK25，再从项目根执行mvn -f backend/pom.xml clean verify；该命令只清理Maven生成的target，不删除源码。不要将增量残留错误当成业务断言失败或修改已有规则语义。
+
 - 本项目已在 **JDK 25**（Java 25.0.1）下完成本地构建与测试验证。如需复现：
 
 ```powershell

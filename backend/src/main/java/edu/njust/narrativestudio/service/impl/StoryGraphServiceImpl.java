@@ -68,6 +68,8 @@ public class StoryGraphServiceImpl implements StoryGraphService {
         guard.editor(userId,projectId);
         accessService.requireEditor(userId, projectId);
         validateNodeKeyUnique(projectId, request.nodeKey().trim(), null);
+        if (nodeMapper.selectCount(new LambdaQueryWrapper<StoryNode>().eq(StoryNode::getProjectId, projectId)) >= 500)
+            throw conflict("单个项目最多允许 500 个节点");
         validateStart(projectId, null, request);
         LocalDateTime now = LocalDateTime.now();
         StoryNode node = new StoryNode();
@@ -160,6 +162,8 @@ public class StoryGraphServiceImpl implements StoryGraphService {
         StoryNode source = requireNode(projectId, sourceNodeId);
         requireNode(projectId, request.targetNodeId());
         if ("ENDING".equals(source.getNodeType())) throw conflict("结局节点不能创建选择");
+        if (choiceMapper.selectCount(new LambdaQueryWrapper<StoryChoice>().eq(StoryChoice::getProjectId, projectId)) >= 1000)
+            throw conflict("单个项目最多允许 1000 条选择");
         LocalDateTime now = LocalDateTime.now();
         StoryChoice choice = new StoryChoice();
         choice.setProjectId(projectId);

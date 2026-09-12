@@ -72,6 +72,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @Transactional
     public ProjectDtos.Summary update(Long userId, Long projectId, ProjectDtos.UpdateRequest request) {
+        projectMapper.lockById(projectId);
         NarrativeProject project = requireProject(projectId);
         ProjectMember membership = requireEditableMembership(userId, projectId);
         if ("ARCHIVED".equals(project.getStatus())) {
@@ -87,6 +88,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @Transactional
     public void archive(Long userId, Long projectId) {
+        projectMapper.lockById(projectId);
         NarrativeProject project = requireProject(projectId);
         ProjectMember membership = requireMembership(userId, projectId);
         if (!"OWNER".equals(membership.getMemberRole())) {

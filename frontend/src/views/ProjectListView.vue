@@ -14,7 +14,10 @@ const loading = ref(true);
 const dialogVisible = ref(false);
 const saving = ref(false);
 const form = reactive({ name: "", description: "" });
-const user = JSON.parse(localStorage.getItem("narrative_user") || "{}");
+const user = (() => {
+  try { return JSON.parse(localStorage.getItem("narrative_user") || "{}") ?? {}; }
+  catch { localStorage.removeItem("narrative_user"); return {}; }
+})();
 
 async function load() {
   loading.value = true;

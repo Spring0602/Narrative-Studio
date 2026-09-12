@@ -23,6 +23,9 @@ class Week3MySqlSmokeTest {
     @Autowired StoryGraphService graph;
     @Autowired RuleService rules;
     @Autowired PlaytestService playtests;
+    @Autowired StoryTransferService transfer;
+    @Autowired ReleaseService releases;
+    @Autowired EndingCoverageService coverage;
 
     @Test void mysqlJsonSnapshotsRoundTripAndEndingCanBeReplayed() {
         String suffix=UUID.randomUUID().toString().replace("-","").substring(0,12);
@@ -38,6 +41,14 @@ class Week3MySqlSmokeTest {
         var s=playtests.start(user,project);
         var done=playtests.advance(user,project,s.id(),choice.id(),0);
         assertEquals("COMPLETED",done.status());assertEquals("50",done.state().get("trust"));
+        assertEquals(100.0,coverage.get(user,project,null).coveragePercent());
+        var document=transfer.exportStory(user,project);
+        var imported=transfer.importStory(user,document);
+        assertEquals(document,transfer.exportStory(user,imported.id()));
+        var release=releases.publish(user,project);
+        var frozen=playtests.startRelease(user,project,release.id());
+        playtests.advance(user,project,frozen.id(),choice.id(),0);
+        assertEquals(100.0,coverage.get(user,project,release.id()).coveragePercent());
         assertEquals(2,playtests.steps(user,project,s.id(),1,20).total());
         assertEquals("OBJECT",db.queryForObject("SELECT JSON_TYPE(state_after) FROM playtest_step WHERE session_id=? AND step_no=1",String.class,s.id()));
         assertEquals("50",db.queryForObject("SELECT JSON_UNQUOTE(JSON_EXTRACT(state_after,'$.trust')) FROM playtest_step WHERE session_id=? AND step_no=1",String.class,s.id()));

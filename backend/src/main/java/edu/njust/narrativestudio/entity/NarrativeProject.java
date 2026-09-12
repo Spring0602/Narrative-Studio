@@ -10,6 +10,7 @@ public class NarrativeProject {
     @TableId(type = IdType.AUTO)
     private Long id;
     private String name;
+    @com.baomidou.mybatisplus.annotation.TableField(updateStrategy = com.baomidou.mybatisplus.annotation.FieldStrategy.ALWAYS)
     private String description;
     private Long ownerId;
     private String status;

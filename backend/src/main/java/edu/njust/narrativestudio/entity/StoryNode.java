@@ -13,8 +13,10 @@ public class StoryNode {
     private Long projectId;
     private String nodeKey;
     private String title;
+    @com.baomidou.mybatisplus.annotation.TableField(updateStrategy = com.baomidou.mybatisplus.annotation.FieldStrategy.ALWAYS)
     private String content;
     private String nodeType;
+    @com.baomidou.mybatisplus.annotation.TableField(updateStrategy = com.baomidou.mybatisplus.annotation.FieldStrategy.ALWAYS)
     private String scene;
     private Boolean isStart;
     private BigDecimal positionX;
