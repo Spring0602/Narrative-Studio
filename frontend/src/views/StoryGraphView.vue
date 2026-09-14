@@ -89,7 +89,7 @@ function createFlowEdge(choice: StoryChoiceSummary): StoryFlowEdge {
     id: `choice-${choice.id}`,
     source: String(choice.sourceNodeId),
     target: String(choice.targetNodeId),
-    type: "smoothstep",
+    type: "default",
     label: choice.choiceText,
     animated: choice.enabled,
     markerEnd: MarkerType.ArrowClosed,
