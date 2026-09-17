@@ -1,12 +1,18 @@
 import { http, type ApiEnvelope } from './http'
 
 export type VariableType = 'BOOLEAN' | 'INTEGER' | 'STRING'
+export interface UnlockRule {
+  type: 'ALL' | 'ANY' | 'NOT' | 'AT_LEAST' | 'ENDING' | 'VISITED' | 'VARIABLE'
+  children?: UnlockRule[]; count?: number; nodeKey?: string; variableKey?: string
+  operator?: ConditionInput['operator']; value?: string
+}
 export interface VariableInput {
   variableKey: string
   displayName: string
   valueType: VariableType
   initialValue: string
   description?: string | null
+  persistenceScope?: 'SESSION' | 'PROFILE'
 }
 export interface StateVariable extends VariableInput { id: number; projectId: number }
 export interface ConditionInput {
@@ -20,9 +26,10 @@ export interface EffectInput {
   operation: 'SET' | 'ADD' | 'SUBTRACT'
   operandValue: string
 }
-export interface RulesInput { conditions: ConditionInput[]; effects: EffectInput[] }
+export interface RulesInput { conditions: ConditionInput[]; effects: EffectInput[]; unlockRule?: UnlockRule | null }
 export interface ChoiceRules {
   choiceId: number
+  unlockRule?: UnlockRule | null
   conditions: (ConditionInput & { id: number; sortOrder: number })[]
   effects: (EffectInput & { id: number; sortOrder: number })[]
 }

@@ -24,11 +24,16 @@ public class RuleServiceImpl implements RuleService {
     private final ProjectMutationGuard guard;
     private final RuleCatalog catalog;
     private final RuleEngine engine;
+    private final edu.njust.narrativestudio.engine.UnlockRuleEngine unlock;
+    private final StoryNodeMapper nodes;
+    private final UnlockReferences references;
     public RuleServiceImpl(StateVariableMapper variables,ChoiceConditionMapper conditions,StateEffectMapper effects,
             StoryChoiceMapper choices,PlaytestSessionMapper sessions,ProjectAccessService access,
-            ProjectMutationGuard guard,RuleCatalog catalog,RuleEngine engine) {
+            ProjectMutationGuard guard,RuleCatalog catalog,RuleEngine engine,
+            edu.njust.narrativestudio.engine.UnlockRuleEngine unlock,StoryNodeMapper nodes,UnlockReferences references) {
         this.variables=variables; this.conditions=conditions; this.effects=effects; this.choices=choices;
         this.sessions=sessions; this.access=access; this.guard=guard; this.catalog=catalog; this.engine=engine;
+        this.unlock=unlock;this.nodes=nodes;this.references=references;
     }
     public List<VariableView> listVariables(Long u,Long p) {
         access.requireMember(u,p); return catalog.variables(p).stream().map(this::view).toList();
@@ -45,12 +50,15 @@ public class RuleServiceImpl implements RuleService {
     @Transactional
     public VariableView updateVariable(Long u,Long p,Long id,VariableRequest r) {
         guard.editor(u,p); StateVariable v=variable(p,id); noActiveSession(p); unique(p,r.variableKey(),id);
+        if(!v.getVariableKey().equals(r.variableKey()) || !v.getValueType().equals(r.valueType()) || !v.getPersistenceScope().equals(r.persistenceScope()))
+            references.requireUnused(p,v.getVariableKey(),true);
         if(!v.getValueType().equals(r.valueType()) && referenced(id)) throw inUse("变量已被规则引用，不能修改类型");
         apply(v,r); variables.updateById(v); return view(v);
     }
     @Transactional
     public void deleteVariable(Long u,Long p,Long id) {
         guard.editor(u,p); variable(p,id); noActiveSession(p);
+        references.requireUnused(p,variable(p,id).getVariableKey(),true);
         if(referenced(id)) throw inUse("变量被条件或效果引用，请先修改关联规则");
         variables.deleteById(id);
     }
@@ -60,6 +68,7 @@ public class RuleServiceImpl implements RuleService {
     @Transactional
     public RulesView replaceRules(Long u,Long p,Long n,Long c,RulesRequest r) {
         guard.editor(u,p); choice(p,n,c);
+        unlock.validate(r.unlockRule(),nodes.selectList(new LambdaQueryWrapper<StoryNode>().eq(StoryNode::getProjectId,p)),catalog.variables(p));
         Map<Long,StateVariable> byId=new HashMap<>(); catalog.variables(p).forEach(v->byId.put(v.getId(),v));
         List<ChoiceCondition> cs=new ArrayList<>(); List<StateEffect> es=new ArrayList<>();
         for(ConditionInput input:r.conditions()) {
@@ -81,6 +90,8 @@ public class RuleServiceImpl implements RuleService {
         conditions.delete(new LambdaQueryWrapper<ChoiceCondition>().eq(ChoiceCondition::getChoiceId,c));
         effects.delete(new LambdaQueryWrapper<StateEffect>().eq(StateEffect::getChoiceId,c));
         cs.forEach(conditions::insert); es.forEach(effects::insert);
+        choices.update(null,new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<StoryChoice>()
+                .eq(StoryChoice::getId,c).set(StoryChoice::getUnlockRule,unlock.encode(r.unlockRule())));
         return ruleView(c,cs,es);
     }
     private void noActiveSession(Long p) {
@@ -107,13 +118,15 @@ public class RuleServiceImpl implements RuleService {
     private void apply(StateVariable v,VariableRequest r) {
         v.setVariableKey(r.variableKey()); v.setDisplayName(r.displayName().trim()); v.setValueType(r.valueType());
         v.setInitialValue(engine.validateValue(r.valueType(),r.initialValue())); v.setDescription(r.description());
+        v.setPersistenceScope(r.persistenceScope());
     }
     private VariableView view(StateVariable v) {
-        return new VariableView(v.getId(),v.getProjectId(),v.getVariableKey(),v.getDisplayName(),v.getValueType(),v.getInitialValue(),v.getDescription());
+        return new VariableView(v.getId(),v.getProjectId(),v.getVariableKey(),v.getDisplayName(),v.getValueType(),v.getInitialValue(),v.getDescription(),v.getPersistenceScope());
     }
     private RulesView ruleView(Long id,List<ChoiceCondition> cs,List<StateEffect> es) {
         return new RulesView(id,cs.stream().map(c->new ConditionView(c.getId(),c.getVariableId(),c.getOperator(),c.getExpectedValue(),c.getConditionGroup(),c.getSortOrder())).toList(),
-                es.stream().map(e->new EffectView(e.getId(),e.getVariableId(),e.getOperation(),e.getOperandValue(),e.getSortOrder())).toList());
+                es.stream().map(e->new EffectView(e.getId(),e.getVariableId(),e.getOperation(),e.getOperandValue(),e.getSortOrder())).toList(),
+                unlock.decode(choices.selectById(id).getUnlockRule()));
     }
     private BusinessException inUse(String message) { return new BusinessException("RESOURCE_IN_USE",message,HttpStatus.CONFLICT); }
 }

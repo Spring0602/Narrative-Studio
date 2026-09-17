@@ -30,15 +30,18 @@ public class StoryGraphServiceImpl implements StoryGraphService {
     private final ProjectAccessService accessService;
     private final edu.njust.narrativestudio.service.ReleaseService releases;
     private final edu.njust.narrativestudio.service.ProjectMutationGuard guard;
+    private final edu.njust.narrativestudio.service.UnlockReferences references;
 
     public StoryGraphServiceImpl(StoryNodeMapper nodeMapper, StoryChoiceMapper choiceMapper,
                                  ProjectAccessService accessService,edu.njust.narrativestudio.service.ReleaseService releases,
-                                 edu.njust.narrativestudio.service.ProjectMutationGuard guard) {
+                                 edu.njust.narrativestudio.service.ProjectMutationGuard guard,
+                                 edu.njust.narrativestudio.service.UnlockReferences references) {
         this.nodeMapper = nodeMapper;
         this.choiceMapper = choiceMapper;
         this.accessService = accessService;
         this.releases = releases;
         this.guard=guard;
+        this.references=references;
     }
 
     @Override
@@ -88,6 +91,8 @@ public class StoryGraphServiceImpl implements StoryGraphService {
         guard.editor(userId,projectId);
         accessService.requireEditor(userId, projectId);
         StoryNode node = requireNode(projectId, nodeId);
+        if(!node.getNodeKey().equals(request.nodeKey()) || !node.getNodeType().equals(request.nodeType()))
+            references.requireUnused(projectId,node.getNodeKey(),false);
         validateNodeKeyUnique(projectId, request.nodeKey().trim(), nodeId);
         validateStart(projectId, nodeId, request);
         if ("ENDING".equals(request.nodeType()) && hasOutgoingChoices(projectId, nodeId)) {
@@ -106,6 +111,7 @@ public class StoryGraphServiceImpl implements StoryGraphService {
         accessService.requireEditor(userId, projectId);
         requireNode(projectId, nodeId);
         releases.requireUnpublished(projectId,nodeId,true);
+        references.requireUnused(projectId,requireNode(projectId,nodeId).getNodeKey(),false);
         Long incoming = choiceMapper.selectCount(new LambdaQueryWrapper<StoryChoice>()
                 .eq(StoryChoice::getProjectId, projectId)
                 .eq(StoryChoice::getTargetNodeId, nodeId));

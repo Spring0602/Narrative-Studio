@@ -29,3 +29,14 @@ ALTER TABLE playtest_session ADD COLUMN IF NOT EXISTS release_id BIGINT NULL REF
 ALTER TABLE playtest_step ADD COLUMN IF NOT EXISTS knowledge_before CLOB NULL;
 ALTER TABLE playtest_step ADD COLUMN IF NOT EXISTS knowledge_after CLOB NULL;
 ALTER TABLE test_feedback ADD COLUMN IF NOT EXISTS step_id BIGINT NULL REFERENCES playtest_step(id);
+ALTER TABLE state_variable ADD COLUMN IF NOT EXISTS persistence_scope VARCHAR(16) NOT NULL DEFAULT 'SESSION';
+ALTER TABLE story_choice ADD COLUMN IF NOT EXISTS unlock_rule CLOB NULL;
+ALTER TABLE playtest_step ADD COLUMN IF NOT EXISTS progress_before CLOB NULL;
+ALTER TABLE playtest_step ADD COLUMN IF NOT EXISTS progress_after CLOB NULL;
+CREATE TABLE IF NOT EXISTS player_progress (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY, project_id BIGINT NOT NULL, tester_id BIGINT NOT NULL,
+  version_key BIGINT NOT NULL DEFAULT 0, revision BIGINT NOT NULL DEFAULT 0, progress_json CLOB NOT NULL,
+  UNIQUE(project_id,tester_id,version_key),
+  FOREIGN KEY(project_id) REFERENCES narrative_project(id) ON DELETE CASCADE,
+  FOREIGN KEY(tester_id) REFERENCES sys_user(id) ON DELETE CASCADE
+);

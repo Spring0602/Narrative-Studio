@@ -28,7 +28,7 @@ public class StoryTransferService {
         var nodes=g.nodes().stream().map(n->new StoryGraphDtos.NodeRequest(n.nodeKey(),n.title(),n.content(),
                 n.nodeType(),n.scene(),n.isStart(),n.positionX(),n.positionY())).toList();
         var vs=variables.stream().map(v->new RuleDtos.VariableRequest(v.variableKey(),v.displayName(),
-                v.valueType(),v.initialValue(),v.description())).toList();
+                v.valueType(),v.initialValue(),v.description(),v.persistenceScope())).toList();
         var choices=g.choices().stream().map(c->{
             var r=rules.getRules(user,project,c.sourceNodeId(),c.id());
             return new Choice(required(nodeKeys,c.sourceNodeId()),required(nodeKeys,c.targetNodeId()),c.choiceText(),
@@ -36,9 +36,9 @@ public class StoryTransferService {
                     r.conditions().stream().map(x->new Condition(required(variableKeys,x.variableId()),
                             x.operator(),x.expectedValue(),x.conditionGroup())).toList(),
                     r.effects().stream().map(x->new Effect(required(variableKeys,x.variableId()),
-                            x.operation(),x.operandValue())).toList());
+                            x.operation(),x.operandValue())).toList(),r.unlockRule());
         }).toList();
-        var result=new Document(1,p.name(),p.description(),nodes,vs,choices);
+        var result=new Document(2,p.name(),p.description(),nodes,vs,choices);
         validate(result);
         return result;
     }
@@ -62,12 +62,15 @@ public class StoryTransferService {
                     c.conditions().stream().map(x->new RuleDtos.ConditionInput(required(variableIds,x.variableKey()),
                             x.operator(),x.expectedValue(),x.conditionGroup())).toList(),
                     c.effects().stream().map(x->new RuleDtos.EffectInput(required(variableIds,x.variableKey()),
-                            x.operation(),x.operandValue())).toList()));
+                            x.operation(),x.operandValue())).toList(),c.unlockRule()));
         }
         return p;
     }
     private void validate(Document document) {
-        if(document==null || !validator.validate(document).isEmpty()) throw FeatureScope.invalid("剧情文件格式或容量不符合 schemaVersion=1");
+        if(document==null || !validator.validate(document).isEmpty()) throw FeatureScope.invalid("剧情文件格式或容量不符合 schemaVersion=1/2");
+        if(document.schemaVersion()==1 && (document.variables().stream().anyMatch(v->!"SESSION".equals(v.persistenceScope()))
+                || document.choices().stream().anyMatch(c->c.unlockRule()!=null)))
+            throw FeatureScope.invalid("跨局变量和高级解锁规则需要 schemaVersion=2");
     }
     private static void unique(Set<String> keys,String key) {
         if(!keys.add(key.toLowerCase(Locale.ROOT))) throw FeatureScope.invalid("剧情文件包含重复标识: "+key);

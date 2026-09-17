@@ -2,6 +2,9 @@
 import { computed, ref, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { apiErrorMessage } from "@/api/errors";
+import UnlockRuleEditor from "./UnlockRuleEditor.vue";
+import { getStoryGraph, type StoryNodeSummary } from "@/api/storyGraph";
+import type { UnlockRule } from "@/api/rules";
 import {
   getChoiceRules,
   listVariables,
@@ -47,6 +50,8 @@ const visible = computed({
 const variables = ref<StateVariable[]>([]);
 const conditions = ref<ConditionRow[]>([]);
 const effects = ref<EffectRow[]>([]);
+const unlockRule = ref<UnlockRule | null>(null);
+const storyNodes = ref<StoryNodeSummary[]>([]);
 const loading = ref(false);
 const saving = ref(false);
 const loadError = ref("");
@@ -124,11 +129,14 @@ async function loadRules() {
   loading.value = true;
   loadError.value = "";
   try {
-    const [variableList, rules] = await Promise.all([
+    const [variableList, rules, graph] = await Promise.all([
       listVariables(props.projectId),
       getChoiceRules(props.projectId, props.nodeId, props.choiceId),
+      getStoryGraph(props.projectId),
     ]);
     variables.value = variableList;
+    storyNodes.value = graph.nodes;
+    unlockRule.value = rules.unlockRule ?? null;
     conditions.value = rules.conditions.map(createConditionRow);
     effects.value = rules.effects.map(createEffectRow);
     emit("loaded", {
@@ -242,6 +250,7 @@ function validateRules() {
 }
 function rulesInput(): RulesInput {
   return {
+    unlockRule: unlockRule.value,
     conditions: conditions.value.map(
       ({ clientId: _clientId, ...condition }) => condition,
     ),
@@ -323,11 +332,15 @@ async function saveRules() {
       >
     </el-alert>
     <div v-loading="loading" class="rule-editor-body">
-      <el-empty
-        v-if="!loading && !loadError && !variables.length"
-        description="请先在“状态变量”页面创建变量"
-      />
-      <template v-else-if="!loadError">
+      <template v-if="!loadError && !loading">
+        <section class="rule-section">
+          <h3>跨路线与复杂解锁条件</h3>
+          <p>与下方基础变量条件同时满足才可选。通关/访问记录属于当前玩家和当前版本，重开保留；最多8层128项。</p>
+          <el-button v-if="!unlockRule && !readonly" @click="unlockRule={type:'ALL',children:[{type:'ENDING',nodeKey:storyNodes.find(n=>n.nodeType==='ENDING')?.nodeKey??''}]}">添加解锁规则</el-button>
+          <UnlockRuleEditor v-if="unlockRule" v-model="unlockRule" :nodes="storyNodes" :variables="variables" :readonly="readonly" />
+          <el-button v-if="unlockRule && !readonly" type="danger" link @click="unlockRule=null">移除附加解锁规则</el-button>
+          <p v-if="!unlockRule">未配置附加解锁规则。</p>
+        </section>
         <section class="rule-section">
           <div class="section-heading">
             <div>
@@ -500,7 +513,7 @@ async function saveRules() {
             v-if="!readonly"
             type="primary"
             :loading="saving"
-            :disabled="Boolean(loadError) || !variables.length"
+            :disabled="Boolean(loadError) || loading"
             @click="saveRules"
             >整体保存规则</el-button
           >

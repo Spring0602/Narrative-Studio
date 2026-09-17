@@ -92,6 +92,7 @@ const form = reactive({
   variableKey: "",
   displayName: "",
   valueType: "INTEGER" as VariableType,
+  persistenceScope: "SESSION" as "SESSION" | "PROFILE",
   initialValue: "0",
   description: "",
 });
@@ -100,6 +101,7 @@ function resetForm() {
     variableKey: "",
     displayName: "",
     valueType: "INTEGER",
+    persistenceScope: "SESSION",
     initialValue: "0",
     description: "",
   });
@@ -126,6 +128,7 @@ function openEdit(variable: StateVariable) {
     variableKey: variable.variableKey,
     displayName: variable.displayName,
     valueType: variable.valueType,
+    persistenceScope: variable.persistenceScope || "SESSION",
     initialValue: variable.initialValue,
     description: variable.description || "",
   });
@@ -152,6 +155,7 @@ function input(): VariableInput {
     variableKey: form.variableKey.trim(),
     displayName: form.displayName.trim(),
     valueType: form.valueType,
+    persistenceScope: form.persistenceScope,
     initialValue: form.initialValue,
     description: form.description.trim() || null,
   };
@@ -326,6 +330,9 @@ onMounted(loadVariables);
     >
       <el-table-column prop="displayName" label="显示名称" min-width="150" />
       <el-table-column prop="variableKey" label="变量标识" min-width="170" />
+      <el-table-column label="保存范围" width="120"><template #default="{row}">
+        <el-tag :type="row.persistenceScope==='PROFILE'?'warning':'info'">{{row.persistenceScope==='PROFILE'?'跨局保存':'仅本局'}}</el-tag>
+      </template></el-table-column>
       <el-table-column label="类型" width="125"
         ><template #default="{ row }"
           ><el-tag :type="tagTypes[row.valueType as VariableType]">{{
@@ -389,7 +396,10 @@ onMounted(loadVariables);
               value="INTEGER" /><el-option
               label="文本（STRING）"
               value="STRING" /></el-select></el-form-item
-        ><el-form-item label="初始值" required
+        ><el-form-item label="保存范围" required>
+          <el-select v-model="form.persistenceScope"><el-option value="SESSION" label="仅本局：重开恢复初始值" /><el-option value="PROFILE" label="跨局：每次成功选择后保存" /></el-select>
+          <small>通关解锁优先使用“历次已通关结局”；跨局变量不会在终止/重开时清空，清档另行确认。</small>
+        </el-form-item><el-form-item label="初始值" required
           ><el-select
             v-if="form.valueType === 'BOOLEAN'"
             v-model="form.initialValue"

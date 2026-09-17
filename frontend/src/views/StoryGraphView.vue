@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { loadAllPages } from "@/api/pagination";
-import { computed, onMounted, reactive, ref, watch } from "vue";
-import { useRoute } from "vue-router";
+import { computed, defineAsyncComponent, onMounted, reactive, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import {
   Handle,
@@ -65,6 +65,13 @@ const props = defineProps<{
   focusNodeId?: number | null;
 }>();
 const route = useRoute();
+const router = useRouter();
+const ExcelImportDialog = defineAsyncComponent(() => import("@/components/ExcelImportDialog.vue"));
+const excelVisible = ref(false);
+async function excelImported(id:number) {
+  if(id===projectId.value) await loadGraph();
+  else await router.push('/projects/'+id+'?module=story');
+}
 const projectId = computed(() => Number(route.params.id));
 const canEdit = computed(
   () =>
@@ -605,6 +612,7 @@ onMounted(loadGraph);
 
 <template>
   <section class="story-page">
+    <ExcelImportDialog v-if="excelVisible" v-model="excelVisible" :project-id="projectId" :existing-nodes="flowNodes.length>0" @imported="excelImported" />
     <div class="page-heading">
       <div>
         <p class="eyebrow">STORY GRAPH</p>
@@ -620,6 +628,7 @@ onMounted(loadGraph);
         <p class="muted">编辑节点、选择、条件效果和未完成的选项草稿。</p>
       </div>
       <div class="heading-actions">
+        <el-button v-if="canEdit" :disabled="loading || Boolean(loadError)" @click="excelVisible=true">Excel 生成关系图</el-button>
         <el-button @click="openDrafts">选项草稿</el-button
         ><el-button
           v-if="canEdit"

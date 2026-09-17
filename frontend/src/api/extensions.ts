@@ -1,10 +1,10 @@
 import { http, type ApiEnvelope } from "./http";
 import type { ProjectSummary } from "./projects";
 import type { SaveStoryNodePayload } from "./storyGraph";
-import type { VariableInput, ConditionInput, EffectInput } from "./rules";
+import type { VariableInput, ConditionInput, EffectInput, UnlockRule } from "./rules";
 
 export interface StoryDocument {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
   name: string;
   description?: string;
   nodes: SaveStoryNodePayload[];
@@ -13,6 +13,7 @@ export interface StoryDocument {
     sourceNodeKey: string; targetNodeKey: string; choiceText: string; sortOrder: number; enabled: boolean;
     conditions: (Omit<ConditionInput, "variableId"> & { variableKey: string })[];
     effects: (Omit<EffectInput, "variableId"> & { variableKey: string })[];
+    unlockRule?: UnlockRule | null;
   }[];
 }
 export interface EndingCoverage {

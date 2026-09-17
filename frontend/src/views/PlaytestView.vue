@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { loadAllPages } from "@/api/pagination";
 import axios from "axios";
+import PlayerProgressPanel from "@/components/PlayerProgressPanel.vue";
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -353,6 +354,14 @@ onMounted(loadPage);
         >
       </div>
     </div>
+    <PlayerProgressPanel
+      :project-id="projectId"
+      :release-id="selectedSource === 'current' ? undefined : selectedSource"
+      :refresh-key="currentSession ? currentSession.id+':'+currentSession.stepNo+':'+currentSession.status : ''"
+      :can-edit="canRun && currentUserRole !== 'TESTER'"
+      :can-run="canRun"
+      @changed="refreshCurrent"
+    />
     <el-alert
       v-if="!canRun"
       title="项目已归档，只能查看历史模拟和快照"
@@ -434,7 +443,7 @@ onMounted(loadPage);
           </article>
           <el-alert
             v-if="currentSession.deadEnd"
-            title="当前普通节点没有可用选择，这是意外死路"
+            title="当前没有可用选择：请检查前置条件或跨路线解锁要求"
             type="error"
             show-icon
             :closable="false"
@@ -462,6 +471,10 @@ onMounted(loadPage);
             >
           </section>
           <div class="session-actions">
+            <el-popover v-if="currentSession.lockedChoices?.length" trigger="click" width="440">
+              <template #reference><el-button>为什么其他选择未解锁？</el-button></template>
+              <div v-for="choice in currentSession.lockedChoices" :key="choice.id"><strong>{{choice.choiceText}}</strong><p>{{choice.reason}}</p></div>
+            </el-popover>
             <el-button :loading="operating" :disabled="!canRun" @click="restart"
               >重新开始</el-button
             ><el-button
@@ -546,6 +559,10 @@ onMounted(loadPage);
                   >：{{ change.before }} → {{ change.after }}
                 </p>
                 <p v-if="!stepKnowledgeChanges(step).length">无变化</p>
+              </div>
+              <div v-if="step.progressAfter">
+                <b>当步跨局记录（不会随清档重写）</b>
+                <p>通关：{{step.progressBefore?.completedEndings.join('、') || '无'}} → {{step.progressAfter.completedEndings.join('、') || '无'}}</p>
               </div>
             </div></el-card
           ></el-timeline-item

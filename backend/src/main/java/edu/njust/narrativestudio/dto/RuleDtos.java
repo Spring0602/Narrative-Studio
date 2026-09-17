@@ -10,9 +10,13 @@ public final class RuleDtos {
             @NotBlank @Size(max=100) String displayName,
             @NotNull @Pattern(regexp="BOOLEAN|INTEGER|STRING") String valueType,
             @NotNull @Size(max=500) String initialValue,
-            @Size(max=500) String description) {}
+            @Size(max=500) String description,
+            @Pattern(regexp="SESSION|PROFILE") String persistenceScope) {
+        public VariableRequest(String key,String name,String type,String initial,String description) {this(key,name,type,initial,description,"SESSION");}
+        public VariableRequest {if(persistenceScope==null) persistenceScope="SESSION";}
+    }
     public record VariableView(Long id, Long projectId, String variableKey, String displayName,
-                               String valueType, String initialValue, String description) {}
+                               String valueType, String initialValue, String description,String persistenceScope) {}
     public record ConditionInput(@NotNull @Positive Long variableId,
             @NotNull @Pattern(regexp="EQ|NE|GT|GTE|LT|LTE") String operator,
             @NotNull @Size(max=500) String expectedValue,
@@ -21,8 +25,10 @@ public final class RuleDtos {
             @NotNull @Pattern(regexp="SET|ADD|SUBTRACT") String operation,
             @NotNull @Size(max=500) String operandValue) {}
     public record RulesRequest(@NotNull @Size(max=100) List<@NotNull @Valid ConditionInput> conditions,
-                               @NotNull @Size(max=100) List<@NotNull @Valid EffectInput> effects) {}
+                               @NotNull @Size(max=100) List<@NotNull @Valid EffectInput> effects,UnlockRule unlockRule) {
+        public RulesRequest(List<ConditionInput> conditions,List<EffectInput> effects) {this(conditions,effects,null);}
+    }
     public record ConditionView(Long id, Long variableId, String operator, String expectedValue, Integer conditionGroup, Integer sortOrder) {}
     public record EffectView(Long id, Long variableId, String operation, String operandValue, Integer sortOrder) {}
-    public record RulesView(Long choiceId, List<ConditionView> conditions, List<EffectView> effects) {}
+    public record RulesView(Long choiceId, List<ConditionView> conditions, List<EffectView> effects,UnlockRule unlockRule) {}
 }

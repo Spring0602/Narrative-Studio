@@ -129,7 +129,7 @@ class DatabaseFeaturesIntegrationTest {
     }
     @Test void importRejectsUnknownVersionAndNullNestedItems() throws Exception {
         var tree=json.valueToTree(transfer.exportStory(1L,10L));
-        ((com.fasterxml.jackson.databind.node.ObjectNode)tree).put("schemaVersion",2);
+        ((com.fasterxml.jackson.databind.node.ObjectNode)tree).put("schemaVersion",3);
         String bearer="Bearer "+jwt.createToken(4L,"user4");
         mvc.perform(post("/api/projects/import").header("Authorization",bearer).contentType("application/json").content(json.writeValueAsString(tree)))
                 .andExpect(status().isBadRequest());

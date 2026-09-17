@@ -1,4 +1,5 @@
 import { http, type ApiEnvelope } from './http'
+import type { ProgressSnapshot } from './progress'
 
 // Values are canonical strings, preserving signed 64-bit INTEGER precision in JS.
 export type StateSnapshot = Record<string, string>
@@ -15,6 +16,8 @@ export interface PlaytestSession {
   releaseId?: number
   knowledge: StateSnapshot
   availableChoices: PlaytestChoice[]
+  progress?: ProgressSnapshot
+  lockedChoices?: { id:number; choiceText:string; reason:string }[]
   deadEnd: boolean
   startedAt: string
   finishedAt?: string
@@ -28,6 +31,8 @@ export interface PlaytestStep {
   stateAfter: StateSnapshot
   knowledgeBefore: StateSnapshot
   knowledgeAfter: StateSnapshot
+  progressBefore?: ProgressSnapshot
+  progressAfter?: ProgressSnapshot
   createdAt: string
 }
 export interface Page<T> { items: T[]; page: number; size: number; total: number; pages: number }

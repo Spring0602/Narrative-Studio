@@ -9,7 +9,7 @@ import edu.njust.narrativestudio.dto.RuleDtos.VariableRequest;
 public final class StoryTransferDtos {
     private StoryTransferDtos() {}
     public record Document(
-            @NotNull @Min(1) @Max(1) Integer schemaVersion,
+            @NotNull @Min(1) @Max(2) Integer schemaVersion,
             @NotBlank @Size(max=100) String name,
             @Size(max=1000) String description,
             @NotNull @Size(max=500) List<@NotNull @Valid NodeRequest> nodes,
@@ -19,7 +19,11 @@ public final class StoryTransferDtos {
             @NotBlank String sourceNodeKey, @NotBlank String targetNodeKey,
             @NotBlank @Size(max=500) String choiceText, Integer sortOrder, @NotNull Boolean enabled,
             @NotNull @Size(max=100) List<@NotNull @Valid Condition> conditions,
-            @NotNull @Size(max=100) List<@NotNull @Valid Effect> effects) {}
+            @NotNull @Size(max=100) List<@NotNull @Valid Effect> effects,UnlockRule unlockRule) {
+        public Choice(String source,String target,String text,Integer order,Boolean enabled,List<Condition> conditions,List<Effect> effects) {
+            this(source,target,text,order,enabled,conditions,effects,null);
+        }
+    }
     public record Condition(@NotBlank String variableKey,
             @NotNull @Pattern(regexp="EQ|NE|GT|GTE|LT|LTE") String operator,
             @NotNull @Size(max=500) String expectedValue,

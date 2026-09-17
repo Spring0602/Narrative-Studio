@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
     "typecheck": "vue-tsc -b --noEmit",
-    "test": "node --test tests/pagination.test.mjs",
+    "test": "node --test --test-concurrency=1 tests/pagination.test.mjs tests/unlock-editor.test.mjs tests/excel-import.test.mjs",
     "format": "prettier --write src"
   },
   "dependencies": {

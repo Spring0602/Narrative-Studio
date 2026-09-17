@@ -30,12 +30,16 @@ public class PlaytestServiceImpl implements PlaytestService {
     private final ObjectMapper json;
     private final ReleaseService releases;
     private final KnowledgeRuntime knowledge;
+    private final PlayerProgressService progress;
+    private final edu.njust.narrativestudio.engine.UnlockRuleEngine unlock;
     public PlaytestServiceImpl(PlaytestSessionMapper sessions,PlaytestStepMapper steps,StoryNodeMapper nodes,
             StoryChoiceMapper choices,ProjectAccessService access,ProjectMutationGuard guard,RuleCatalog catalog,
-            RuleEngine engine,ObjectMapper json,ReleaseService releases,KnowledgeRuntime knowledge) {
+            RuleEngine engine,ObjectMapper json,ReleaseService releases,KnowledgeRuntime knowledge,PlayerProgressService progress,
+            edu.njust.narrativestudio.engine.UnlockRuleEngine unlock) {
         this.sessions=sessions; this.steps=steps; this.nodes=nodes; this.choices=choices; this.access=access;
         this.guard=guard; this.catalog=catalog; this.engine=engine; this.json=json;
         this.releases=releases;this.knowledge=knowledge;
+        this.progress=progress;this.unlock=unlock;
     }
     @Transactional
     public SessionView start(Long u,Long p) { guard.member(u,p); return startInternal(u,p,null); }
@@ -50,7 +54,9 @@ public class PlaytestServiceImpl implements PlaytestService {
             :frozen.nodes().stream().filter(n->Boolean.TRUE.equals(n.getIsStart())).toList();
         if(starts.size()!=1) throw invalidState("剧情必须有且只有一个起点");
         StoryNode start=starts.getFirst(); validateNodeType(start);
-        Map<String,String> initial=engine.initialState(frozen==null?catalog.variables(p):frozen.variables());
+        var vars=frozen==null?catalog.variables(p):frozen.variables();
+        var progressBefore=progress.snapshot(u,p,release);
+        Map<String,String> initial=progress.overlay(vars,engine.initialState(vars),progressBefore);
         PlaytestSession s=new PlaytestSession(); s.setProjectId(p); s.setTesterId(u);
         s.setReleaseId(release);
         s.setCurrentNodeId(start.getId()); s.setStartedAt(LocalDateTime.now());
@@ -58,6 +64,8 @@ public class PlaytestServiceImpl implements PlaytestService {
         if("COMPLETED".equals(s.getStatus())) s.setFinishedAt(s.getStartedAt());
         sessions.insert(s);
         PlaytestStep step=step(s,0,start.getId(),null,initial,initial);
+        step.setProgressBefore(progress.encode(progressBefore));
+        step.setProgressAfter(progress.encode(progress.enter(u,p,release,vars,initial,start,progressBefore)));
         var initialKnowledge=knowledge.enter(frozen==null?knowledge.definitions(p):frozen.knowledge(),Map.of(),start.getId(),true);
         step.setKnowledgeBefore(encode(initialKnowledge));step.setKnowledgeAfter(encode(initialKnowledge));steps.insert(step);
         return view(s,start,step);
@@ -79,13 +87,18 @@ public class PlaytestServiceImpl implements PlaytestService {
         if(c==null || !p.equals(c.getProjectId()) || !s.getCurrentNodeId().equals(c.getSourceNodeId())) throw BusinessException.notFound("当前节点不存在该选择");
         if(!Boolean.TRUE.equals(c.getEnabled())) throw invalidState("选择已停用");
         List<StateVariable> vars=frozen==null?catalog.variables(p):frozen.variables();
-        Map<String,String> before=decode(previous.getStateAfter());
+        var progressBefore=progress.snapshot(u,p,s.getReleaseId());
+        Map<String,String> before=progress.overlay(vars,decode(previous.getStateAfter()),progressBefore);
         var conditions=frozen==null?catalog.conditions(choiceId):frozen.conditions().stream().filter(item->choiceId.equals(item.getChoiceId())).toList();
         var effects=frozen==null?catalog.effects(choiceId):frozen.effects().stream().filter(item->choiceId.equals(item.getChoiceId())).toList();
         if(!engine.available(vars,conditions,before)) throw invalidState("当前状态不满足选择条件");
+        if(!unlock.available(unlock.decode(c.getUnlockRule()),vars,before,progressBefore))
+            throw invalidState("尚未满足跨路线解锁条件");
         StoryNode target=node(s,c.getTargetNodeId());
         Map<String,String> after=engine.apply(vars,effects,before);
         PlaytestStep next=step(s,previous.getStepNo()+1,target.getId(),choiceId,before,after);
+        next.setProgressBefore(progress.encode(progressBefore));
+        next.setProgressAfter(progress.encode(progress.enter(u,p,s.getReleaseId(),vars,after,target,progressBefore)));
         var knowledgeBefore=decodeKnowledge(previous.getKnowledgeAfter());
         next.setKnowledgeBefore(encode(knowledgeBefore));
         next.setKnowledgeAfter(encode(knowledge.enter(frozen==null?knowledge.definitions(p):frozen.knowledge(),knowledgeBefore,target.getId(),false)));
@@ -121,29 +134,37 @@ public class PlaytestServiceImpl implements PlaytestService {
         var rows=steps.selectList(q.orderByAsc(PlaytestStep::getStepNo).last(limit(page,size)));
         return new Page<>(rows.stream().map(s->new StepView(s.getId(),s.getStepNo(),s.getNodeId(),s.getChoiceId(),
                 decode(s.getStateBefore()),decode(s.getStateAfter()),s.getCreatedAt(),
-                decodeKnowledge(s.getKnowledgeBefore()),decodeKnowledge(s.getKnowledgeAfter()))).toList(),page,size,total,(total+size-1)/size);
+                decodeKnowledge(s.getKnowledgeBefore()),decodeKnowledge(s.getKnowledgeAfter()),
+                progress.decode(s.getProgressBefore()),progress.decode(s.getProgressAfter()))).toList(),page,size,total,(total+size-1)/size);
     }
     private SessionView view(PlaytestSession s,StoryNode current,PlaytestStep latest) {
         Map<String,String> state=decode(latest.getStateAfter());
+        var currentProgress="RUNNING".equals(s.getStatus())?progress.snapshot(s.getTesterId(),s.getProjectId(),s.getReleaseId()):progress.decode(latest.getProgressAfter());
         List<ChoiceView> visible=new ArrayList<>();
+        List<LockedChoiceView> locked=new ArrayList<>();
         if("RUNNING".equals(s.getStatus()) && !"ENDING".equals(current.getNodeType())) {
             var frozen=s.getReleaseId()==null?null:releases.snapshot(s.getProjectId(),s.getReleaseId());
             List<StateVariable> vars=frozen==null?catalog.variables(s.getProjectId()):frozen.variables();
+            state=progress.overlay(vars,state,currentProgress);
             var candidates=frozen==null?choices.selectList(new LambdaQueryWrapper<StoryChoice>().eq(StoryChoice::getProjectId,s.getProjectId())
                     .eq(StoryChoice::getSourceNodeId,current.getId()).eq(StoryChoice::getEnabled,true)
                     .orderByAsc(StoryChoice::getSortOrder).orderByAsc(StoryChoice::getId))
                 :frozen.choices().stream().filter(c->current.getId().equals(c.getSourceNodeId()) && Boolean.TRUE.equals(c.getEnabled())).toList();
             for(StoryChoice c:candidates) {
                 var conditions=frozen==null?catalog.conditions(c.getId()):frozen.conditions().stream().filter(item->c.getId().equals(item.getChoiceId())).toList();
-                if(engine.available(vars,conditions,state))
+                boolean normal=engine.available(vars,conditions,state);
+                boolean unlocked=unlock.available(unlock.decode(c.getUnlockRule()),vars,state,currentProgress);
+                if(normal && unlocked)
                     visible.add(new ChoiceView(c.getId(),c.getTargetNodeId(),c.getChoiceText(),c.getSortOrder()));
+                else locked.add(new LockedChoiceView(c.getId(),c.getChoiceText(),
+                        (normal?"":"尚未满足基础变量条件；")+(unlocked?"":"解锁要求："+unlock.describe(unlock.decode(c.getUnlockRule())))));
             }
         }
         return new SessionView(s.getId(),s.getProjectId(),s.getTesterId(),s.getStatus(),
                 new NodeView(current.getId(),current.getNodeKey(),current.getTitle(),current.getContent(),current.getNodeType()),
                 latest.getStepNo(),Collections.unmodifiableMap(state),visible,
                 "RUNNING".equals(s.getStatus()) && visible.isEmpty(),s.getStartedAt(),s.getFinishedAt(),
-                s.getReleaseId(),decodeKnowledge(latest.getKnowledgeAfter()));
+                s.getReleaseId(),decodeKnowledge(latest.getKnowledgeAfter()),currentProgress,locked);
     }
     private PlaytestSession owned(Long u,Long p,Long id) {
         PlaytestSession s=sessions.selectById(id);
