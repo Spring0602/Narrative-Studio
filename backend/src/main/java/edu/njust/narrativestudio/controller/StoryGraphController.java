@@ -44,6 +44,13 @@ public class StoryGraphController {
         return ApiResponse.ok(graphService.createNode(currentUser.id(auth), projectId, request));
     }
 
+    @PostMapping("/batch")
+    public ApiResponse<List<StoryGraphDtos.NodeSummary>> createNodes(
+            Authentication auth, @PathVariable Long projectId,
+            @Valid @RequestBody StoryGraphDtos.BatchNodesRequest request) {
+        return ApiResponse.ok(graphService.createNodes(currentUser.id(auth), projectId, request));
+    }
+
     @PutMapping("/{nodeId}")
     public ApiResponse<StoryGraphDtos.NodeSummary> updateNode(Authentication auth, @PathVariable Long projectId,
                                                               @PathVariable Long nodeId,

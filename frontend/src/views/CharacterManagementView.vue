@@ -49,13 +49,7 @@ const filteredCharacters = computed(() => {
   const normalizedKeyword = keyword.value.trim().toLocaleLowerCase();
   if (!normalizedKeyword) return activeCharacters.value;
   return activeCharacters.value.filter((character) =>
-    [
-      character.name,
-      character.summary,
-      character.personality,
-      character.goal,
-      character.valueOrder,
-    ].some((value) => value?.toLocaleLowerCase().includes(normalizedKeyword)),
+    character.name.toLocaleLowerCase().includes(normalizedKeyword),
   );
 });
 
@@ -264,7 +258,7 @@ onMounted(load);
       <el-input
         v-model="keyword"
         clearable
-        placeholder="搜索姓名、简介、性格、目标或价值排序"
+        placeholder="搜索角色名"
         class="keyword-input"
       />
       <span class="result-count"
@@ -350,7 +344,7 @@ onMounted(load);
         v-else
         :description="
           activeCharacters.length
-            ? '没有符合搜索条件的角色'
+            ? '没有符合名称搜索条件的角色'
             : '当前项目暂无角色档案'
         "
       />

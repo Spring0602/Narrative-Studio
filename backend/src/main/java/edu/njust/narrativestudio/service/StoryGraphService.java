@@ -7,6 +7,8 @@ public interface StoryGraphService {
     StoryGraphDtos.Graph getGraph(Long userId, Long projectId);
     StoryGraphDtos.NodeSummary getNode(Long userId, Long projectId, Long nodeId);
     StoryGraphDtos.NodeSummary createNode(Long userId, Long projectId, StoryGraphDtos.NodeRequest request);
+    List<StoryGraphDtos.NodeSummary> createNodes(Long userId, Long projectId,
+                                                 StoryGraphDtos.BatchNodesRequest request);
     StoryGraphDtos.NodeSummary updateNode(Long userId, Long projectId, Long nodeId,
                                           StoryGraphDtos.NodeRequest request);
     void deleteNode(Long userId, Long projectId, Long nodeId);

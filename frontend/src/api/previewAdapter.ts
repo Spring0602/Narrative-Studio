@@ -379,8 +379,38 @@ function dataFor(url: string) {
   return null;
 }
 
+function requestData<T>(data: unknown): T {
+  return (typeof data === "string" ? JSON.parse(data) : data) as T;
+}
+
+function createPreviewNode(input: Record<string, unknown>) {
+  const created = {
+    ...input,
+    id: Math.max(0, ...nodes.map((node) => node.id)) + 1,
+    projectId: 1,
+    updatedAt: new Date().toISOString(),
+  };
+  nodes.push(created as (typeof nodes)[number]);
+  return created;
+}
+
+function responseData(config: Parameters<AxiosAdapter>[0]) {
+  const url = config.url || "";
+  const method = config.method?.toUpperCase() || "GET";
+  if (method === "POST" && /\/story-nodes\/batch$/.test(url)) {
+    const payload = requestData<{ nodes: Record<string, unknown>[] }>(
+      config.data,
+    );
+    return payload.nodes.map(createPreviewNode);
+  }
+  if (method === "POST" && /\/story-nodes$/.test(url)) {
+    return createPreviewNode(requestData<Record<string, unknown>>(config.data));
+  }
+  return dataFor(url);
+}
+
 export const previewAdapter: AxiosAdapter = async (config) => ({
-  data: { success: true, data: dataFor(config.url || "") },
+  data: { success: true, data: responseData(config) },
   status: 200,
   statusText: "OK",
   headers: new AxiosHeaders({ "content-type": "application/json" }),
