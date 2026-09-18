@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1340"><rect width="100%" height="100%" fill="white"/>
+<text x="800" y="25" font-family="Microsoft YaHei,sans-serif" font-size="40" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">新增选择分支的 UML 时序图</text>
+<rect x="10" y="110" width="280" height="115" fill="#DFEDF8" stroke="#294660" stroke-width="3"/>
+<text x="150.0" y="138.5" font-family="Microsoft YaHei,sans-serif" font-size="24" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">页面</text>
+<text x="150.0" y="172.5" font-family="Microsoft YaHei,sans-serif" font-size="24" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">WorkspaceView</text>
+<polyline points="150,225 150,1240" fill="none" stroke="#294660" stroke-width="3" stroke-dasharray="10 8"/>
+<rect x="335" y="110" width="280" height="115" fill="#DFEDF8" stroke="#294660" stroke-width="3"/>
+<text x="475.0" y="138.5" font-family="Microsoft YaHei,sans-serif" font-size="24" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">控制器</text>
+<text x="475.0" y="172.5" font-family="Microsoft YaHei,sans-serif" font-size="24" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">StoryGraphController</text>
+<polyline points="475,225 475,1240" fill="none" stroke="#294660" stroke-width="3" stroke-dasharray="10 8"/>
+<rect x="660" y="110" width="280" height="115" fill="#DFEDF8" stroke="#294660" stroke-width="3"/>
+<text x="800.0" y="138.5" font-family="Microsoft YaHei,sans-serif" font-size="24" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">业务服务</text>
+<text x="800.0" y="172.5" font-family="Microsoft YaHei,sans-serif" font-size="24" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">StoryGraphServiceImpl</text>
+<polyline points="800,225 800,1240" fill="none" stroke="#294660" stroke-width="3" stroke-dasharray="10 8"/>
+<rect x="985" y="110" width="280" height="115" fill="#DFEDF8" stroke="#294660" stroke-width="3"/>
+<text x="1125.0" y="138.5" font-family="Microsoft YaHei,sans-serif" font-size="24" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">权限服务</text>
+<text x="1125.0" y="172.5" font-family="Microsoft YaHei,sans-serif" font-size="24" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">ProjectAccessService</text>
+<polyline points="1125,225 1125,1240" fill="none" stroke="#294660" stroke-width="3" stroke-dasharray="10 8"/>
+<rect x="1310" y="110" width="280" height="115" fill="#DFEDF8" stroke="#294660" stroke-width="3"/>
+<text x="1450.0" y="138.5" font-family="Microsoft YaHei,sans-serif" font-size="24" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">数据访问</text>
+<text x="1450.0" y="172.5" font-family="Microsoft YaHei,sans-serif" font-size="24" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">Node / ChoiceMapper</text>
+<polyline points="1450,225 1450,1240" fill="none" stroke="#294660" stroke-width="3" stroke-dasharray="10 8"/>
+<text x="165" y="270" font-family="Microsoft YaHei,sans-serif" font-size="26" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">1 提交分支 DTO</text>
+<polyline points="150,310 475,310" fill="none" stroke="#294660" stroke-width="3"/>
+<polygon points="475,310 461.0,303.0 461.0,317.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<text x="490" y="353" font-family="Microsoft YaHei,sans-serif" font-size="26" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">2 createChoice(...)</text>
+<polyline points="475,393 800,393" fill="none" stroke="#294660" stroke-width="3"/>
+<polygon points="800,393 786.0,386.0 786.0,400.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<text x="815" y="436" font-family="Microsoft YaHei,sans-serif" font-size="26" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">3 requireEditor(...)</text>
+<polyline points="800,476 1125,476" fill="none" stroke="#294660" stroke-width="3"/>
+<polygon points="1125,476 1111.0,469.0 1111.0,483.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<text x="815" y="519" font-family="Microsoft YaHei,sans-serif" font-size="26" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">4 通过权限检查</text>
+<polyline points="1125,559 800,559" fill="none" stroke="#294660" stroke-width="3" stroke-dasharray="10 8"/>
+<polygon points="800,559 814.0,566.0 814.0,552.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<text x="815" y="602" font-family="Microsoft YaHei,sans-serif" font-size="26" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">5 查询源节点、目标节点</text>
+<polyline points="800,642 1450,642" fill="none" stroke="#294660" stroke-width="3"/>
+<polygon points="1450,642 1436.0,635.0 1436.0,649.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<text x="815" y="685" font-family="Microsoft YaHei,sans-serif" font-size="26" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">6 返回节点数据</text>
+<polyline points="1450,725 800,725" fill="none" stroke="#294660" stroke-width="3" stroke-dasharray="10 8"/>
+<polygon points="800,725 814.0,732.0 814.0,718.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<text x="830" y="769" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">7 业务约束校验</text>
+<polyline points="800,808 875,808 875,838 800,838" fill="none" stroke="#294660" stroke-width="3"/>
+<polygon points="800,838 814.0,845.0 814.0,831.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<text x="815" y="851" font-family="Microsoft YaHei,sans-serif" font-size="26" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">8 insert(StoryChoice)</text>
+<polyline points="800,891 1450,891" fill="none" stroke="#294660" stroke-width="3"/>
+<polygon points="1450,891 1436.0,884.0 1436.0,898.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<text x="815" y="934" font-family="Microsoft YaHei,sans-serif" font-size="26" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">9 返回持久化结果</text>
+<polyline points="1450,974 800,974" fill="none" stroke="#294660" stroke-width="3" stroke-dasharray="10 8"/>
+<polygon points="800,974 814.0,981.0 814.0,967.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<text x="490" y="1017" font-family="Microsoft YaHei,sans-serif" font-size="26" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">10 返回 ChoiceSummary</text>
+<polyline points="800,1057 475,1057" fill="none" stroke="#294660" stroke-width="3" stroke-dasharray="10 8"/>
+<polygon points="475,1057 489.0,1064.0 489.0,1050.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<text x="165" y="1100" font-family="Microsoft YaHei,sans-serif" font-size="26" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">11 返回响应，更新画布</text>
+<polyline points="475,1140 150,1140" fill="none" stroke="#294660" stroke-width="3" stroke-dasharray="10 8"/>
+<polygon points="150,1140 164.0,1147.0 164.0,1133.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<text x="800" y="1280" font-family="Microsoft YaHei,sans-serif" font-size="29" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">实线：调用；虚线：返回。校验失败时返回业务错误，不写入分支。</text>
+</svg>

@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1500"><rect width="100%" height="100%" fill="white"/>
+<text x="800" y="25" font-family="Microsoft YaHei,sans-serif" font-size="40" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">剧情编辑功能的核心类关系</text>
+<rect x="580" y="110" width="440" height="169" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="580" y="110" width="440" height="64" fill="#FFF1CC" stroke="#294660" stroke-width="3"/>
+<text x="800" y="127" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">StoryGraphController</text>
+<text x="596" y="188" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">+ createNode(...)</text>
+<text x="596" y="231" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">+ createChoice(...)</text>
+<rect x="580" y="420" width="440" height="212" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="580" y="420" width="440" height="64" fill="#E8F1E1" stroke="#294660" stroke-width="3"/>
+<text x="800" y="437" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">StoryGraphService</text>
+<text x="596" y="498" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">«interface»</text>
+<text x="596" y="541" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">+ createNode(...)</text>
+<text x="596" y="584" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">+ createChoice(...)</text>
+<rect x="580" y="740" width="440" height="169" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="580" y="740" width="440" height="64" fill="#E8F1E1" stroke="#294660" stroke-width="3"/>
+<text x="800" y="757" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">StoryGraphServiceImpl</text>
+<text x="596" y="818" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">- accessService</text>
+<text x="596" y="861" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">- nodeMapper / choiceMapper</text>
+<rect x="40" y="740" width="440" height="126" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="40" y="740" width="440" height="64" fill="#E8F1E1" stroke="#294660" stroke-width="3"/>
+<text x="260" y="757" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">ProjectAccessService</text>
+<text x="56" y="818" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">+ requireEditor(...)</text>
+<rect x="40" y="1070" width="440" height="126" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="40" y="1070" width="440" height="64" fill="#EFE8F7" stroke="#294660" stroke-width="3"/>
+<text x="260" y="1087" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">StoryNodeMapper</text>
+<text x="56" y="1148" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">+ insert(...) / selectById(...)</text>
+<rect x="1120" y="1070" width="440" height="126" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="1120" y="1070" width="440" height="64" fill="#EFE8F7" stroke="#294660" stroke-width="3"/>
+<text x="1340" y="1087" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">StoryChoiceMapper</text>
+<text x="1136" y="1148" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">+ insert(...) / selectList(...)</text>
+<rect x="40" y="1330" width="440" height="126" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="40" y="1330" width="440" height="64" fill="#DFEDF8" stroke="#294660" stroke-width="3"/>
+<text x="260" y="1347" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">StoryNode</text>
+<text x="56" y="1408" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">id / projectId / nodeKey</text>
+<rect x="1120" y="1330" width="440" height="126" fill="white" stroke="#294660" stroke-width="3"/>
+<rect x="1120" y="1330" width="440" height="64" fill="#DFEDF8" stroke="#294660" stroke-width="3"/>
+<text x="1340" y="1347" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">StoryChoice</text>
+<text x="1136" y="1408" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">sourceNodeId / targetNodeId</text>
+<polyline points="800,279 800,420" fill="none" stroke="#294660" stroke-width="3" stroke-dasharray="10 8"/>
+<polygon points="800,420 807.0,406.0 793.0,406.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<text x="820" y="333" font-family="Microsoft YaHei,sans-serif" font-size="30" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">调用</text>
+<polyline points="800,740 800,632" fill="none" stroke="#294660" stroke-width="3" stroke-dasharray="10 8"/>
+<polygon points="800,632 790.5,651.0 809.5,651.0" fill="white" stroke="#294660" stroke-width="3"/>
+<text x="820" y="665" font-family="Microsoft YaHei,sans-serif" font-size="30" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">实现</text>
+<polyline points="580,820 480,820" fill="none" stroke="#294660" stroke-width="3" stroke-dasharray="10 8"/>
+<polygon points="480,820 494.0,827.0 494.0,813.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<text x="530" y="770" font-family="Microsoft YaHei,sans-serif" font-size="27" fill="#294660" dominant-baseline="text-before-edge" text-anchor="middle">鉴权</text>
+<polyline points="680,909 680,990 260,990 260,1070" fill="none" stroke="#294660" stroke-width="3" stroke-dasharray="10 8"/>
+<polygon points="260,1070 267.0,1056.0 253.0,1056.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<polyline points="260,1196 260,1330" fill="none" stroke="#294660" stroke-width="3" stroke-dasharray="10 8"/>
+<polygon points="260,1330 267.0,1316.0 253.0,1316.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<text x="280" y="1250" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">持久化</text>
+<polyline points="920,909 920,990 1340,990 1340,1070" fill="none" stroke="#294660" stroke-width="3" stroke-dasharray="10 8"/>
+<polygon points="1340,1070 1347.0,1056.0 1333.0,1056.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<polyline points="1340,1196 1340,1330" fill="none" stroke="#294660" stroke-width="3" stroke-dasharray="10 8"/>
+<polygon points="1340,1330 1347.0,1316.0 1333.0,1316.0" fill="#294660" stroke="#294660" stroke-width="3"/>
+<text x="1360" y="1250" font-family="Microsoft YaHei,sans-serif" font-size="28" fill="#294660" dominant-baseline="text-before-edge" text-anchor="start">持久化</text>
+</svg>
