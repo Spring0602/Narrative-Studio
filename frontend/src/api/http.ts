@@ -28,7 +28,8 @@ http.interceptors.request.use((config) => {
 http.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const errorCode = error.response?.data?.error?.code;
+    if (error.response?.status === 401 && errorCode !== "INVALID_CREDENTIALS") {
       localStorage.removeItem("narrative_token");
       localStorage.removeItem("narrative_user");
       if (location.pathname !== "/login") location.href = "/login";

@@ -481,6 +481,20 @@ class DatabaseFeaturesIntegrationTest {
         mvc.perform(get("/api/account").header("Authorization","Bearer "+jwt.createToken(2L,"user2"))).andExpect(status().isUnauthorized());
         assertThrows(BusinessException.class,()->accounts.status(1L,1L,new UserStatus("DISABLED")));
     }
+    @Test void passwordChangeRejectsWrongCurrentPasswordWithoutChangingCredential() throws Exception {
+        String bearer="Bearer "+jwt.createToken(1L,"user1");
+        mvc.perform(put("/api/account/password").header("Authorization",bearer).contentType("application/json")
+                .content("{\"currentPassword\":\"wrong-password\",\"newPassword\":\"newPassword123\"}"))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.error.code").value("INVALID_CREDENTIALS"))
+            .andExpect(jsonPath("$.error.message").value("当前密码错误"));
+        mvc.perform(post("/api/auth/login").contentType("application/json")
+                .content("{\"username\":\"user1\",\"password\":\"password123\"}"))
+            .andExpect(status().isOk());
+        mvc.perform(post("/api/auth/login").contentType("application/json")
+                .content("{\"username\":\"user1\",\"password\":\"newPassword123\"}"))
+            .andExpect(status().isUnauthorized());
+    }
     @Test void concurrentTokenConsumptionSucceedsOnce() throws Exception {
         accounts.requestEmail(1L,new EmailRequest("owner@example.com","password123"));String raw=sent.get();
         try(var executor=Executors.newFixedThreadPool(2)) {
