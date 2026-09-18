@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { loadAllPages } from "@/api/pagination";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { apiErrorMessage } from "@/api/errors";
@@ -67,9 +67,6 @@ const issues = ref<DetectedIssue[]>([]);
 const nodeLabels = ref<Record<number, string>>({});
 const choiceSourceNodes = ref<Record<number, number>>({});
 const selectedId = ref<number | null>(null);
-const selectedIssue = computed(
-  () => issues.value.find((issue) => issue.id === selectedId.value) ?? null,
-);
 const loading = ref(true);
 const loadError = ref("");
 const analyzing = ref(false);
@@ -92,6 +89,22 @@ const filteredIssues = computed(() => {
         )),
   );
 });
+const selectedIssue = computed(
+  () =>
+    filteredIssues.value.find((issue) => issue.id === selectedId.value) ??
+    null,
+);
+
+watch(
+  filteredIssues,
+  (visibleIssues) => {
+    const selectedIsVisible = visibleIssues.some(
+      (issue) => issue.id === selectedId.value,
+    );
+    if (!selectedIsVisible) selectedId.value = visibleIssues[0]?.id ?? null;
+  },
+  { immediate: true, flush: "sync" },
+);
 const counts = computed(() => ({
   open: issues.value.filter((issue) => issue.status === "OPEN").length,
   error: issues.value.filter(
@@ -327,7 +340,13 @@ onMounted(load);
       <aside class="detail">
         <el-empty
           v-if="!selectedIssue"
-          description="选择一个问题查看详情"
+          :description="
+            filteredIssues.length
+              ? '选择一个问题查看详情'
+              : issues.length
+                ? '当前筛选结果中没有可查看的问题'
+                : '尚无检测问题，请运行一次检测'
+          "
         /><template v-else
           ><p class="label">问题详情</p>
           <h2>{{ typeLabels[selectedIssue.issueType] }}</h2>

@@ -275,8 +275,8 @@ function dataFor(url: string) {
         projectId: 1,
         characterId: 1,
         knowledgeKey: "hidden_route",
-        knowledgeLevel: "SUSPECTED",
-        description: "怀疑父亲曾进入未登记的航线",
+        knowledgeLevel: "FORGOTTEN",
+        description: "曾知晓父亲进入过未登记航线，但相关记忆已经模糊",
         acquiredNodeId: 1,
       },
     ];

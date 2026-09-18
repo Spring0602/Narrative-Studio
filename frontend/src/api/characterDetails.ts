@@ -14,7 +14,7 @@ export interface RelationInput {
   relationType: string;
   description?: string | null;
 }
-export type KnowledgeLevel = "UNKNOWN" | "SUSPECTED" | "KNOWN";
+export type KnowledgeLevel = "UNKNOWN" | "KNOWN" | "FORGOTTEN";
 export interface CharacterKnowledge {
   id: number;
   projectId: number;

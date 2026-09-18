@@ -187,7 +187,7 @@ async function removeCharacter(character: CharacterSummary) {
 
   try {
     await ElMessageBox.confirm(
-      `确定要删除角色档案“${character.name}”吗？删除后将不再出现在角色列表中。`,
+      `确定要删除角色档案“${character.name}”吗？如果该角色仍被角色关系、知识记录或剧情节点引用，系统会阻止删除，请先解除关联。`,
       "删除角色档案",
       {
         confirmButtonText: "确定删除",

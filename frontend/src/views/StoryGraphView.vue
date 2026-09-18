@@ -59,6 +59,7 @@ import {
   type ChoiceDraft,
 } from "@/api/choiceDrafts";
 import ChoiceRuleEditorDialog from "@/components/ChoiceRuleEditorDialog.vue";
+import AiDialogueCandidateDialog from "@/components/AiDialogueCandidateDialog.vue";
 
 interface StoryNodeData {
   summary: StoryNodeSummary;
@@ -255,6 +256,7 @@ watch(
 );
 
 const nodeDialogVisible = ref(false);
+const aiDialogueVisible = ref(false);
 const nodeDialogMode = ref<"create" | "edit">("create");
 const editingNodeId = ref<number | null>(null);
 const nodeForm = reactive({
@@ -324,6 +326,14 @@ function openEditNode(node: StoryNodeSummary) {
   });
   rememberNodeFormState();
   nodeDialogVisible.value = true;
+}
+
+function applyDialogueCandidate(text: string, mode: "append" | "replace") {
+  nodeForm.content =
+    mode === "replace"
+      ? text
+      : [nodeForm.content.trimEnd(), text].filter(Boolean).join("\n\n");
+  aiDialogueVisible.value = false;
 }
 
 async function requestNodeDialogClose(done?: () => void) {
@@ -438,6 +448,12 @@ function openImportDialog() {
   importFileName.value = "";
   importRows.value = [];
   importDialogVisible.value = true;
+}
+
+function handleExcelImportCommand(command: string) {
+  if (!canEdit.value) return void ElMessage.warning(readOnlyReason.value);
+  if (command === "graph") excelVisible.value = true;
+  else if (command === "nodes") openImportDialog();
 }
 
 function chooseImportFile() {
@@ -980,6 +996,14 @@ onMounted(loadGraph);
 <template>
   <section class="story-page">
     <ExcelImportDialog v-if="excelVisible" v-model="excelVisible" :project-id="projectId" :existing-nodes="flowNodes.length>0" @imported="excelImported" />
+    <AiDialogueCandidateDialog
+      v-if="editingNodeId"
+      v-model="aiDialogueVisible"
+      :project-id="projectId"
+      :node-id="editingNodeId"
+      :node-title="nodeForm.title"
+      @apply="applyDialogueCandidate"
+    />
     <div class="page-heading">
       <div>
         <p class="eyebrow">STORY GRAPH</p>
@@ -995,13 +1019,26 @@ onMounted(loadGraph);
         <p class="muted">编辑节点、选择、条件效果和未完成的选项草稿。</p>
       </div>
       <div class="heading-actions">
-        <el-button v-if="canEdit" :disabled="loading || Boolean(loadError)" @click="excelVisible=true">Excel 生成关系图</el-button>
-        <el-button @click="openDrafts">选项草稿</el-button
-        ><el-button
+        <el-dropdown
           v-if="canEdit"
           :disabled="loading || Boolean(loadError)"
-          @click="openImportDialog"
-          >导入 Excel</el-button
+          @command="handleExcelImportCommand"
+        >
+          <el-button :disabled="loading || Boolean(loadError)">
+            导入 Excel⌄
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="graph">
+                生成完整剧情图（节点与连线）
+              </el-dropdown-item>
+              <el-dropdown-item command="nodes">
+                按模板追加节点
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+        <el-button @click="openDrafts">选项草稿</el-button
         ><el-button
           v-if="canEdit"
           type="primary"
@@ -1286,8 +1323,17 @@ onMounted(loadGraph);
           ><el-input v-model="nodeForm.title" maxlength="120" /></el-form-item
         ><el-form-item label="场景"
           ><el-input v-model="nodeForm.scene" maxlength="100" /></el-form-item
-        ><el-form-item label="剧情正文"
-          ><el-input
+        ><el-form-item label="剧情正文">
+          <template #label>
+            <span>剧情正文</span>
+            <el-button
+              v-if="nodeDialogMode === 'edit' && editingNodeId"
+              link
+              type="primary"
+              @click="aiDialogueVisible = true"
+            >AI 台词候选</el-button>
+          </template>
+          <el-input
             v-model="nodeForm.content"
             type="textarea"
             :rows="6"
