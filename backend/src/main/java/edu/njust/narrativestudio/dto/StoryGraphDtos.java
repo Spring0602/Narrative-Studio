@@ -45,7 +45,7 @@ public final class StoryGraphDtos {
             @NotNull @DecimalMin("-99999999.99") @DecimalMax("99999999.99") BigDecimal positionY) {}
 
     public record BatchPositionsRequest(
-            @NotEmpty @Size(max = 500) List<@Valid PositionItem> positions) {}
+            @NotEmpty @Size(max = 500) List<@NotNull @Valid PositionItem> positions) {}
 
     public record BatchNodesRequest(
             @NotEmpty @Size(max = 200) List<@Valid NodeRequest> nodes) {}

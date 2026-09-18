@@ -7,6 +7,10 @@ import java.time.LocalDateTime;
 
 @TableName("story_choice")
 public class StoryChoice {
+    @com.baomidou.mybatisplus.annotation.TableField(updateStrategy = com.baomidou.mybatisplus.annotation.FieldStrategy.ALWAYS)
+    private String unlockRule;
+    public String getUnlockRule() {return unlockRule;}
+    public void setUnlockRule(String value) {unlockRule=value;}
     @TableId(type = IdType.AUTO)
     private Long id;
     private Long projectId;

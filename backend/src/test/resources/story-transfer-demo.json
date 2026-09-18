@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "name": "雨城档案：双结局验收样例",
+  "description": "仅用于独立测试项目；不包含账户、发布与历史数据。",
+  "nodes": [
+    {
+      "nodeKey": "start",
+      "title": "雨夜来信",
+      "content": "雨夜来信：记录线索，决定故事的下一步。",
+      "nodeType": "NORMAL",
+      "isStart": true,
+      "positionX": 0,
+      "positionY": 0
+    },
+    {
+      "nodeKey": "gate",
+      "title": "城门询问",
+      "content": "城门询问：记录线索，决定故事的下一步。",
+      "nodeType": "NORMAL",
+      "isStart": false,
+      "positionX": 180,
+      "positionY": 0
+    },
+    {
+      "nodeKey": "archive",
+      "title": "档案馆线索",
+      "content": "档案馆线索：记录线索，决定故事的下一步。",
+      "nodeType": "NORMAL",
+      "isStart": false,
+      "positionX": 360,
+      "positionY": 0
+    },
+    {
+      "nodeKey": "market",
+      "title": "市集会面",
+      "content": "市集会面：记录线索，决定故事的下一步。",
+      "nodeType": "NORMAL",
+      "isStart": false,
+      "positionX": 540,
+      "positionY": 0
+    },
+    {
+      "nodeKey": "tower",
+      "title": "钟楼调查",
+      "content": "钟楼调查：记录线索，决定故事的下一步。",
+      "nodeType": "NORMAL",
+      "isStart": false,
+      "positionX": 720,
+      "positionY": 0
+    },
+    {
+      "nodeKey": "courtyard",
+      "title": "庭院约定",
+      "content": "庭院约定：记录线索，决定故事的下一步。",
+      "nodeType": "NORMAL",
+      "isStart": false,
+      "positionX": 900,
+      "positionY": 0
+    },
+    {
+      "nodeKey": "bridge",
+      "title": "旧桥交涉",
+      "content": "旧桥交涉：记录线索，决定故事的下一步。",
+      "nodeType": "NORMAL",
+      "isStart": false,
+      "positionX": 1080,
+      "positionY": 0
+    },
+    {
+      "nodeKey": "decision",
+      "title": "最后的选择",
+      "content": "最后的选择：记录线索，决定故事的下一步。",
+      "nodeType": "NORMAL",
+      "isStart": false,
+      "positionX": 1260,
+      "positionY": 0
+    },
+    {
+      "nodeKey": "open_end",
+      "title": "公开真相",
+      "content": "公开真相：记录线索，决定故事的下一步。",
+      "nodeType": "ENDING",
+      "isStart": false,
+      "positionX": 1440,
+      "positionY": 0
+    },
+    {
+      "nodeKey": "hidden_end",
+      "title": "守护秘密",
+      "content": "守护秘密：记录线索，决定故事的下一步。",
+      "nodeType": "ENDING",
+      "isStart": false,
+      "positionX": 1620,
+      "positionY": 200
+    }
+  ],
+  "variables": [
+    {
+      "variableKey": "trust",
+      "displayName": "信任",
+      "valueType": "INTEGER",
+      "initialValue": "0"
+    },
+    {
+      "variableKey": "hasKey",
+      "displayName": "持有钥匙",
+      "valueType": "BOOLEAN",
+      "initialValue": "false"
+    }
+  ],
+  "choices": [
+    {
+      "sourceNodeKey": "start",
+      "targetNodeKey": "gate",
+      "choiceText": "前往城门询问",
+      "sortOrder": 0,
+      "enabled": true,
+      "conditions": [],
+      "effects": [
+        {
+          "variableKey": "trust",
+          "operation": "ADD",
+          "operandValue": "30"
+        }
+      ]
+    },
+    {
+      "sourceNodeKey": "gate",
+      "targetNodeKey": "archive",
+      "choiceText": "前往档案馆线索",
+      "sortOrder": 0,
+      "enabled": true,
+      "conditions": [],
+      "effects": []
+    },
+    {
+      "sourceNodeKey": "archive",
+      "targetNodeKey": "market",
+      "choiceText": "前往市集会面",
+      "sortOrder": 0,
+      "enabled": true,
+      "conditions": [],
+      "effects": [
+        {
+          "variableKey": "trust",
+          "operation": "ADD",
+          "operandValue": "20"
+        },
+        {
+          "variableKey": "hasKey",
+          "operation": "SET",
+          "operandValue": "true"
+        }
+      ]
+    },
+    {
+      "sourceNodeKey": "market",
+      "targetNodeKey": "tower",
+      "choiceText": "前往钟楼调查",
+      "sortOrder": 0,
+      "enabled": true,
+      "conditions": [],
+      "effects": []
+    },
+    {
+      "sourceNodeKey": "tower",
+      "targetNodeKey": "courtyard",
+      "choiceText": "前往庭院约定",
+      "sortOrder": 0,
+      "enabled": true,
+      "conditions": [],
+      "effects": []
+    },
+    {
+      "sourceNodeKey": "courtyard",
+      "targetNodeKey": "bridge",
+      "choiceText": "前往旧桥交涉",
+      "sortOrder": 0,
+      "enabled": true,
+      "conditions": [],
+      "effects": []
+    },
+    {
+      "sourceNodeKey": "bridge",
+      "targetNodeKey": "decision",
+      "choiceText": "前往最后的选择",
+      "sortOrder": 0,
+      "enabled": true,
+      "conditions": [],
+      "effects": []
+    },
+    {
+      "sourceNodeKey": "decision",
+      "targetNodeKey": "open_end",
+      "choiceText": "公开真相",
+      "sortOrder": 0,
+      "enabled": true,
+      "conditions": [],
+      "effects": []
+    },
+    {
+      "sourceNodeKey": "decision",
+      "targetNodeKey": "hidden_end",
+      "choiceText": "守护秘密",
+      "sortOrder": 1,
+      "enabled": true,
+      "conditions": [
+        {
+          "variableKey": "trust",
+          "operator": "GTE",
+          "expectedValue": "50",
+          "conditionGroup": 0
+        },
+        {
+          "variableKey": "hasKey",
+          "operator": "EQ",
+          "expectedValue": "true",
+          "conditionGroup": 0
+        }
+      ],
+      "effects": []
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { loadAllPages } from "@/api/pagination";
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -66,8 +67,8 @@ async function load() {
   loadError.value = "";
   try {
     const [page, sessionPage] = await Promise.all([
-      listFeedback(projectId.value, 1, 100),
-      listPlaytests(projectId.value, 1, 100),
+      loadAllPages((page, size) => listFeedback(projectId.value, page, size)),
+      loadAllPages((page, size) => listPlaytests(projectId.value, page, size)),
     ]);
     feedback.value = page.items;
     sessions.value = sessionPage.items;
@@ -106,7 +107,7 @@ async function onSessionChange(sessionId: number | null) {
   }
   try {
     steps.value = (
-      await getPlaytestSteps(projectId.value, sessionId, 1, 100)
+      await loadAllPages((page, size) => getPlaytestSteps(projectId.value, sessionId, page, size), 10001)
     ).items;
   } catch (error) {
     ElMessage.error(apiErrorMessage(error, "会话步骤加载失败"));

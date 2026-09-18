@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { loadAllPages } from "@/api/pagination";
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -126,7 +127,7 @@ async function load() {
   loadError.value = "";
   try {
     const [page, graph] = await Promise.all([
-      listIssues(projectId.value, 1, 100),
+      loadAllPages((page, size) => listIssues(projectId.value, page, size)),
       getStoryGraph(projectId.value),
     ]);
     issues.value = page.items;

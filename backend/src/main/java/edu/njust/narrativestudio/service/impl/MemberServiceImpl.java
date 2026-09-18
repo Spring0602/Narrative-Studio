@@ -22,12 +22,14 @@ public class MemberServiceImpl implements MemberService {
     private final ProjectMemberMapper memberMapper;
     private final UserMapper userMapper;
     private final ProjectAccessService accessService;
+    private final edu.njust.narrativestudio.service.ProjectMutationGuard guard;
 
     public MemberServiceImpl(ProjectMemberMapper memberMapper, UserMapper userMapper,
-                             ProjectAccessService accessService) {
+                             ProjectAccessService accessService, edu.njust.narrativestudio.service.ProjectMutationGuard guard) {
         this.memberMapper = memberMapper;
         this.userMapper = userMapper;
         this.accessService = accessService;
+        this.guard = guard;
     }
 
     @Override
@@ -45,6 +47,7 @@ public class MemberServiceImpl implements MemberService {
     @Override
     @Transactional
     public MemberDtos.Summary add(Long userId, Long projectId, MemberDtos.AddRequest request) {
+        guard.editor(userId,projectId);
         accessService.requireOwner(userId, projectId);
         User invited = userMapper.selectOne(new LambdaQueryWrapper<User>()
                 .eq(User::getUsername, request.username().trim()));
@@ -69,6 +72,7 @@ public class MemberServiceImpl implements MemberService {
     @Transactional
     public MemberDtos.Summary updateRole(Long userId, Long projectId, Long memberId,
                                          MemberDtos.RoleRequest request) {
+        guard.editor(userId,projectId);
         accessService.requireOwner(userId, projectId);
         ProjectMember member = requireProjectMember(projectId, memberId);
         if ("OWNER".equals(member.getMemberRole())) {
@@ -82,6 +86,7 @@ public class MemberServiceImpl implements MemberService {
     @Override
     @Transactional
     public void remove(Long userId, Long projectId, Long memberId) {
+        guard.editor(userId,projectId);
         accessService.requireOwner(userId, projectId);
         ProjectMember member = requireProjectMember(projectId, memberId);
         if ("OWNER".equals(member.getMemberRole())) {

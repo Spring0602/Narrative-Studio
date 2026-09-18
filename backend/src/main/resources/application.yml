@@ -2,6 +2,10 @@ server:
   port: ${SERVER_PORT:8080}
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
   application:
     name: narrative-studio-backend
   datasource:
@@ -20,6 +24,10 @@ mybatis-plus:
     banner: false
 
 app:
+  ai:
+    enabled: ${AI_ENABLED:false}
+    endpoint: ${AI_ENDPOINT:http://127.0.0.1:11434/api/generate}
+    model: ${AI_MODEL:}
   jwt:
     # 生产环境必须通过 JWT_SECRET 注入至少 32 字节的随机值。
     secret: ${JWT_SECRET:dev-only-change-this-secret-32-bytes-minimum}

@@ -7,6 +7,11 @@ import java.time.LocalDateTime;
 
 @TableName("playtest_step")
 public class PlaytestStep {
+    private String progressBefore,progressAfter;
+    public String getProgressBefore() {return progressBefore;}
+    public void setProgressBefore(String v) {progressBefore=v;}
+    public String getProgressAfter() {return progressAfter;}
+    public void setProgressAfter(String v) {progressAfter=v;}
     private String knowledgeBefore;
     public String getKnowledgeBefore() { return knowledgeBefore; }
     public void setKnowledgeBefore(String value) { knowledgeBefore=value; }

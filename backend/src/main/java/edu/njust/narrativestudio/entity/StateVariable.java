@@ -7,6 +7,9 @@ import java.time.LocalDateTime;
 
 @TableName("state_variable")
 public class StateVariable {
+    private String persistenceScope = "SESSION";
+    public String getPersistenceScope() {return persistenceScope==null?"SESSION":persistenceScope;}
+    public void setPersistenceScope(String value) {persistenceScope=value;}
     @TableId(type = IdType.AUTO)
     private Long id;
     private Long projectId;

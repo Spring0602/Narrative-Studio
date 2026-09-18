@@ -33,7 +33,8 @@ class StoryGraphServiceImplTest {
     void setUp() {
         service = new StoryGraphServiceImpl(nodeMapper, choiceMapper, accessService,
             org.mockito.Mockito.mock(edu.njust.narrativestudio.service.ReleaseService.class),
-            org.mockito.Mockito.mock(edu.njust.narrativestudio.service.ProjectMutationGuard.class));
+            org.mockito.Mockito.mock(edu.njust.narrativestudio.service.ProjectMutationGuard.class),
+            org.mockito.Mockito.mock(edu.njust.narrativestudio.service.UnlockReferences.class));
     }
 
     @Test

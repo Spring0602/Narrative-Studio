@@ -28,6 +28,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthDtos.AuthResponse register(AuthDtos.RegisterRequest request) {
+        if (request.password().getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72)
+            throw edu.njust.narrativestudio.service.FeatureScope.invalid("密码 UTF-8 编码后不能超过 72 字节");
         Long count = userMapper.selectCount(new LambdaQueryWrapper<User>().eq(User::getUsername, request.username()));
         if (count > 0) throw BusinessException.conflict("用户名已存在");
         User user = new User();

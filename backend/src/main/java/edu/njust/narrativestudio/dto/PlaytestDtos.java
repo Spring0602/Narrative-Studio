@@ -10,11 +10,13 @@ public final class PlaytestDtos {
     public record AdvanceRequest(@NotNull @Min(0) Integer expectedStepNo) {}
     public record NodeView(Long id, String nodeKey, String title, String content, String nodeType) {}
     public record ChoiceView(Long id, Long targetNodeId, String choiceText, Integer sortOrder) {}
+    public record LockedChoiceView(Long id,String choiceText,String reason) {}
     public record SessionView(Long id, Long projectId, Long testerId, String status, NodeView currentNode,
             int stepNo, Map<String,String> state, List<ChoiceView> availableChoices,
             boolean deadEnd, LocalDateTime startedAt, LocalDateTime finishedAt,
-            Long releaseId, Map<String,String> knowledge) {}
+            Long releaseId, Map<String,String> knowledge,ProgressSnapshot progress,List<LockedChoiceView> lockedChoices) {}
     public record StepView(Long id, int stepNo, Long nodeId, Long choiceId,
             Map<String,String> stateBefore, Map<String,String> stateAfter, LocalDateTime createdAt,
-            Map<String,String> knowledgeBefore, Map<String,String> knowledgeAfter) {}
+            Map<String,String> knowledgeBefore, Map<String,String> knowledgeAfter,
+            ProgressSnapshot progressBefore,ProgressSnapshot progressAfter) {}
 }

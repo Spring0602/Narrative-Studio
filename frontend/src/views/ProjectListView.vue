@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from "vue";
+import { defineAsyncComponent, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import {
@@ -9,12 +9,17 @@ import {
 } from "@/api/projects";
 
 const router = useRouter();
+const ExcelImportDialog = defineAsyncComponent(() => import("@/components/ExcelImportDialog.vue"));
+const excelVisible = ref(false);
 const projects = ref<ProjectSummary[]>([]);
 const loading = ref(true);
 const dialogVisible = ref(false);
 const saving = ref(false);
 const form = reactive({ name: "", description: "" });
-const user = JSON.parse(localStorage.getItem("narrative_user") || "{}");
+const user = (() => {
+  try { return JSON.parse(localStorage.getItem("narrative_user") || "{}") ?? {}; }
+  catch { localStorage.removeItem("narrative_user"); return {}; }
+})();
 
 async function load() {
   loading.value = true;
@@ -77,6 +82,7 @@ onMounted(load);
           </div>
           <p class="muted">从结构化设定开始，逐步搭出一条能走通的故事。</p>
         </div>
+        <el-button size="large" @click="excelVisible = true">从 Excel 生成剧情图</el-button>
         <el-button type="primary" size="large" @click="dialogVisible = true"
           >新建项目</el-button
         >
@@ -102,6 +108,7 @@ onMounted(load);
       </div>
       <el-empty v-else description="还没有项目，先创建第一个互动故事吧" />
     </main>
+    <ExcelImportDialog v-if="excelVisible" v-model="excelVisible" @imported="id => router.push('/projects/'+id+'?module=story')" />
     <el-dialog v-model="dialogVisible" title="新建剧情项目" width="480px">
       <el-form label-position="top">
         <el-form-item label="项目名称"

@@ -18,11 +18,14 @@ public class ReleaseService {
     private final WorldEntryMapper world;private final CharacterProfileMapper characters;private final CharacterRelationMapper relations;
     private final CharacterKnowledgeMapper knowledge;private final NodeCharacterMapper cast;private final RuleCatalog catalog;
     private final RuleEngine engine;private final ProjectAccessService access;private final ProjectMutationGuard guard;private final ObjectMapper json;
+    private final edu.njust.narrativestudio.engine.UnlockRuleEngine unlock;
     public ReleaseService(StoryReleaseMapper releases,StoryNodeMapper nodes,StoryChoiceMapper choices,WorldEntryMapper world,
             CharacterProfileMapper characters,CharacterRelationMapper relations,CharacterKnowledgeMapper knowledge,NodeCharacterMapper cast,
-            RuleCatalog catalog,RuleEngine engine,ProjectAccessService access,ProjectMutationGuard guard,ObjectMapper json) {
+            RuleCatalog catalog,RuleEngine engine,ProjectAccessService access,ProjectMutationGuard guard,ObjectMapper json,
+            edu.njust.narrativestudio.engine.UnlockRuleEngine unlock) {
         this.releases=releases;this.nodes=nodes;this.choices=choices;this.world=world;this.characters=characters;this.relations=relations;
         this.knowledge=knowledge;this.cast=cast;this.catalog=catalog;this.engine=engine;this.access=access;this.guard=guard;this.json=json;
+        this.unlock=unlock;
     }
     public PlaytestService.Page<Summary> list(Long u,Long p,int page,int size) {
         access.requireMember(u,p);String limit=FeatureScope.limit(page,size);
@@ -43,6 +46,7 @@ public class ReleaseService {
         Map<Long,StateVariable> variableMap=new HashMap<>();vs.forEach(v->variableMap.put(v.getId(),v));
         List<ChoiceCondition> conditions=new ArrayList<>();List<StateEffect> effects=new ArrayList<>();
         for(StoryChoice c:cs) {
+            unlock.validate(unlock.decode(c.getUnlockRule()),ns,vs);
             if(!nodeMap.containsKey(c.getSourceNodeId()) || !nodeMap.containsKey(c.getTargetNodeId())
                     || "ENDING".equals(nodeMap.get(c.getSourceNodeId()).getNodeType())) throw FeatureScope.invalid("发布图存在非法连接");
             for(ChoiceCondition condition:catalog.conditions(c.getId())) {
@@ -66,7 +70,7 @@ public class ReleaseService {
             world.selectList(new LambdaQueryWrapper<WorldEntry>().eq(WorldEntry::getProjectId,p).orderByAsc(WorldEntry::getId)),chars,rs,ks,casts);
         var last=releases.selectOne(new LambdaQueryWrapper<StoryRelease>().eq(StoryRelease::getProjectId,p).orderByDesc(StoryRelease::getVersionNo).last("LIMIT 1"));
         StoryRelease r=new StoryRelease();r.setProjectId(p);r.setVersionNo(last==null?1:Math.incrementExact(last.getVersionNo()));
-        r.setPublishedBy(u);r.setPublishedAt(LocalDateTime.now());r.setSchemaVersion(1);
+        r.setPublishedBy(u);r.setPublishedAt(LocalDateTime.now());r.setSchemaVersion(2);
         try { r.setContentSnapshot(json.writeValueAsString(snapshot)); }
         catch(Exception ex) { throw BusinessException.conflict("发布快照序列化失败"); }
         releases.insert(r);return summary(r);
@@ -74,7 +78,7 @@ public class ReleaseService {
     public ReleaseSnapshot snapshot(Long p,Long id) {
         StoryRelease r=releases.selectById(id);
         if(r==null || !p.equals(r.getProjectId())) throw BusinessException.notFound("发布版本不存在");
-        if(!Integer.valueOf(1).equals(r.getSchemaVersion())) throw BusinessException.conflict("不支持该发布快照版本");
+        if(!Set.of(1,2).contains(r.getSchemaVersion())) throw BusinessException.conflict("不支持该发布快照版本");
         try { return json.readValue(r.getContentSnapshot(),ReleaseSnapshot.class); }
         catch(Exception ex) { throw BusinessException.conflict("发布快照损坏"); }
     }

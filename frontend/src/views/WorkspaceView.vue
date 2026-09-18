@@ -36,7 +36,7 @@ const projectId = computed(() => Number(route.params.id));
 const isPreviewMode = computed(
   () => import.meta.env.DEV && route.query.preview === "1",
 );
-const activeModule = ref("overview");
+const activeModule = ref(route.query.module === "story" ? "story" : "overview");
 const focusedStoryNodeId = ref<number | null>(null);
 const modules = [
   { key: "overview", label: "项目概览", icon: compassIcon },

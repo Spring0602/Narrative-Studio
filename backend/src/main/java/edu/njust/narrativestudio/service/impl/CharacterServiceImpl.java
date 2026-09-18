@@ -76,6 +76,8 @@ public class CharacterServiceImpl implements CharacterService {
         accessService.requireEditor(userId, projectId);
         CharacterProfile character = requireCharacter(projectId, characterId);
         character.setStatus("DELETED");
+        if(characterMapper.countReferences(characterId)>0)
+            throw new BusinessException("RESOURCE_IN_USE", "角色仍有关系、知识或出场引用，请先解除关联", org.springframework.http.HttpStatus.CONFLICT);
         character.setUpdatedAt(LocalDateTime.now());
         characterMapper.updateById(character);
     }

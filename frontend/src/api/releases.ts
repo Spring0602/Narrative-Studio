@@ -1,5 +1,6 @@
 import { http, type ApiEnvelope } from "./http";
 import type { Page } from "./playtests";
+import type { StateVariable } from "./rules";
 
 export interface ReleaseSummary {
   id: number;
@@ -11,6 +12,14 @@ export interface ReleaseSummary {
 }
 
 const base = (projectId: number) => `/projects/${projectId}/releases`;
+export interface ReleaseSnapshot {
+  nodes: { id: number; title: string; nodeKey:string; nodeType:string }[];
+  variables: StateVariable[];
+}
+
+export async function getRelease(projectId: number, releaseId: number) {
+  return (await http.get<ApiEnvelope<ReleaseSnapshot>>(`${base(projectId)}/${releaseId}`)).data.data;
+}
 
 export async function listReleases(projectId: number, page = 1, size = 100) {
   return (
