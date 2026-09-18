@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -63,6 +64,37 @@ class StoryGraphServiceImplTest {
                 () -> service.createNode(7L, 10L, nodeRequest("second", "第二起点", "NORMAL", true)));
 
         assertEquals("CONFLICT", ex.getCode());
+    }
+
+    @Test
+    void batchCreateRejectsDuplicateKeysBeforeAnyInsert() {
+        StoryGraphDtos.BatchNodesRequest request = new StoryGraphDtos.BatchNodesRequest(List.of(
+                nodeRequest("same", "节点一", "NORMAL", false),
+                nodeRequest("SAME", "节点二", "ENDING", false)));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.createNodes(7L, 10L, request));
+
+        assertEquals("CONFLICT", ex.getCode());
+        verify(nodeMapper, never()).insert(any(StoryNode.class));
+    }
+
+    @Test
+    void batchCreateInsertsEveryValidatedNode() {
+        when(nodeMapper.selectCount(any())).thenReturn(0L);
+        when(nodeMapper.insert(any(StoryNode.class))).thenAnswer(invocation -> {
+            StoryNode node = invocation.getArgument(0);
+            node.setId("first".equals(node.getNodeKey()) ? 21L : 22L);
+            return 1;
+        });
+        StoryGraphDtos.BatchNodesRequest request = new StoryGraphDtos.BatchNodesRequest(List.of(
+                nodeRequest("first", "节点一", "NORMAL", false),
+                nodeRequest("last", "节点二", "ENDING", false)));
+
+        List<StoryGraphDtos.NodeSummary> result = service.createNodes(7L, 10L, request);
+
+        assertEquals(List.of(21L, 22L), result.stream().map(StoryGraphDtos.NodeSummary::id).toList());
+        verify(nodeMapper, times(2)).insert(any(StoryNode.class));
     }
 
     @Test

@@ -81,6 +81,17 @@ export async function createStoryNode(
   return data.data;
 }
 
+export async function createStoryNodesBatch(
+  projectId: number,
+  nodes: SaveStoryNodePayload[],
+) {
+  const { data } = await http.post<ApiEnvelope<StoryNodeSummary[]>>(
+    `/projects/${projectId}/story-nodes/batch`,
+    { nodes },
+  );
+  return data.data;
+}
+
 export async function updateStoryNode(
   projectId: number,
   nodeId: number,

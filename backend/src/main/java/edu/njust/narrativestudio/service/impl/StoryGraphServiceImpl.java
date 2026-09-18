@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -82,6 +83,54 @@ public class StoryGraphServiceImpl implements StoryGraphService {
         node.setUpdatedAt(now);
         nodeMapper.insert(node);
         return toNodeSummary(node);
+    }
+
+    @Override
+    @Transactional
+    public List<StoryGraphDtos.NodeSummary> createNodes(
+            Long userId, Long projectId, StoryGraphDtos.BatchNodesRequest request) {
+        guard.editor(userId, projectId);
+        accessService.requireEditor(userId, projectId);
+
+        Set<String> nodeKeys = new HashSet<>();
+        Set<String> normalizedNodeKeys = new HashSet<>();
+        long importedStartCount = 0;
+        for (StoryGraphDtos.NodeRequest nodeRequest : request.nodes()) {
+            String nodeKey = nodeRequest.nodeKey().trim();
+            if (!normalizedNodeKeys.add(nodeKey.toLowerCase(Locale.ROOT))) {
+                throw conflict("批量导入中存在重复的节点标识：" + nodeKey);
+            }
+            nodeKeys.add(nodeKey);
+            if (Boolean.TRUE.equals(nodeRequest.isStart())) {
+                if ("ENDING".equals(nodeRequest.nodeType())) {
+                    throw invalid("结局节点不能设为起点：" + nodeKey);
+                }
+                importedStartCount++;
+            }
+        }
+
+        if (nodeMapper.selectCount(new LambdaQueryWrapper<StoryNode>()
+                .eq(StoryNode::getProjectId, projectId)
+                .in(StoryNode::getNodeKey, nodeKeys)) > 0) {
+            throw conflict("导入文件包含项目中已存在的节点标识");
+        }
+        if (importedStartCount > 1 || (importedStartCount == 1 && nodeMapper.selectCount(
+                new LambdaQueryWrapper<StoryNode>()
+                        .eq(StoryNode::getProjectId, projectId)
+                        .eq(StoryNode::getIsStart, true)) > 0)) {
+            throw conflict("项目只能有一个起点");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        return request.nodes().stream().map(nodeRequest -> {
+            StoryNode node = new StoryNode();
+            node.setProjectId(projectId);
+            applyNode(node, nodeRequest);
+            node.setCreatedAt(now);
+            node.setUpdatedAt(now);
+            nodeMapper.insert(node);
+            return toNodeSummary(node);
+        }).toList();
     }
 
     @Override

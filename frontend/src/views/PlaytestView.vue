@@ -2,6 +2,7 @@
 import { loadAllPages } from "@/api/pagination";
 import axios from "axios";
 import PlayerProgressPanel from "@/components/PlayerProgressPanel.vue";
+import EndingCoveragePanel from "@/components/EndingCoveragePanel.vue";
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -49,6 +50,7 @@ const statusTags: Record<
   PlaytestSession["status"],
   "warning" | "success" | "info"
 > = { RUNNING: "warning", COMPLETED: "success", ABORTED: "info" };
+const hiddenRouteUnlockKey = "hidden_routes_unlocked";
 
 const sessions = ref<PlaytestSession[]>([]);
 const releases = ref<ReleaseSummary[]>([]);
@@ -73,6 +75,15 @@ const stateRows = computed(() =>
 const knowledgeRows = computed(() =>
   snapshotRows(currentSession.value?.knowledge ?? {}, {}),
 );
+const hasHiddenRouteUnlockState = computed(() =>
+  Object.prototype.hasOwnProperty.call(
+    currentSession.value?.state ?? {},
+    hiddenRouteUnlockKey,
+  ),
+);
+const hiddenRoutesUnlocked = computed(() =>
+  isTrueStateValue(currentSession.value?.state[hiddenRouteUnlockKey]),
+);
 
 function snapshotRows(snapshot: StateSnapshot, labels: Record<string, string>) {
   return Object.entries(snapshot).map(([key, value]) => ({
@@ -80,6 +91,24 @@ function snapshotRows(snapshot: StateSnapshot, labels: Record<string, string>) {
     label: labels[key] || key,
     value,
   }));
+}
+function isTrueStateValue(value?: string) {
+  return value?.trim().toLowerCase() === "true";
+}
+function showProgressInheritanceResult(
+  wasUnlocked: boolean,
+  nextSession: PlaytestSession,
+) {
+  if (
+    wasUnlocked &&
+    !isTrueStateValue(nextSession.state[hiddenRouteUnlockKey])
+  ) {
+    sessionNotice.value =
+      "新会话未继承隐藏路线解锁状态。这是服务器持久进度尚未恢复，不是剧情选项条件配置错误。";
+    ElMessage.warning("隐藏路线解锁状态未被新会话继承");
+    return false;
+  }
+  return true;
 }
 function formatTime(value?: string) {
   return value
@@ -159,6 +188,7 @@ async function start() {
     return void ElMessage.warning("已归档项目只能查看历史会话");
   operating.value = true;
   sessionNotice.value = "";
+  const wasUnlocked = hiddenRoutesUnlocked.value;
   try {
     const session =
       selectedSource.value === "current"
@@ -166,9 +196,15 @@ async function start() {
         : await startReleasedPlaytest(projectId.value, selectedSource.value);
     await loadPage();
     await selectSession(session);
-    ElMessage.success(
-      session.releaseId ? "已从冻结版本开始模拟" : "已从当前编辑版开始模拟",
-    );
+    const nextSession = currentSession.value;
+    if (
+      !nextSession ||
+      showProgressInheritanceResult(wasUnlocked, nextSession)
+    ) {
+      ElMessage.success(
+        session.releaseId ? "已从冻结版本开始模拟" : "已从当前编辑版开始模拟",
+      );
+    }
   } catch (error) {
     ElMessage.error(apiErrorMessage(error, "模拟会话创建失败"));
   } finally {
@@ -241,8 +277,8 @@ async function restart() {
   try {
     await ElMessageBox.confirm(
       session.releaseId
-        ? "将从同一冻结版本创建新会话，旧历史继续保留。"
-        : "将使用当前最新定义创建新会话，旧历史继续保留。",
+        ? "将从同一冻结版本创建新会话。普通会话状态会重置，服务器保存的永久路线进度应继续保留，旧历史不会删除。"
+        : "将使用当前最新定义创建新会话。普通会话状态会重置，服务器保存的永久路线进度应继续保留，旧历史不会删除。",
       "重新开始模拟",
       { type: "warning" },
     );
@@ -250,11 +286,22 @@ async function restart() {
     return;
   }
   operating.value = true;
+  const wasUnlocked = isTrueStateValue(session.state[hiddenRouteUnlockKey]);
   try {
     const next = await restartPlaytest(projectId.value, session.id);
     await loadPage();
     await selectSession(next);
-    ElMessage.success("已创建新的模拟会话");
+    const nextSession = currentSession.value;
+    if (
+      !nextSession ||
+      showProgressInheritanceResult(wasUnlocked, nextSession)
+    ) {
+      ElMessage.success(
+        wasUnlocked
+          ? "已创建新会话，隐藏路线解锁状态已保留"
+          : "已创建新的模拟会话",
+      );
+    }
   } catch (error) {
     ElMessage.error(apiErrorMessage(error, "重新开始失败"));
   } finally {
@@ -361,6 +408,11 @@ onMounted(loadPage);
       :can-edit="canRun && currentUserRole !== 'TESTER'"
       :can-run="canRun"
       @changed="refreshCurrent"
+    />
+    <EndingCoveragePanel
+      :project-id="projectId"
+      :release-id="selectedSource === 'current' ? undefined : selectedSource"
+      :refresh-key="currentSession ? currentSession.id+':'+currentSession.stepNo+':'+currentSession.status : ''"
     />
     <el-alert
       v-if="!canRun"
@@ -490,6 +542,16 @@ onMounted(loadPage);
         </template>
       </main>
       <aside class="snapshots">
+        <section v-if="hasHiddenRouteUnlockState" class="route-progress">
+          <h3>路线解锁状态</h3>
+          <div class="progress-line">
+            <span>隐藏路线</span>
+            <el-tag :type="hiddenRoutesUnlocked ? 'success' : 'info'">
+              {{ hiddenRoutesUnlocked ? "本会话已解锁" : "本会话未解锁" }}
+            </el-tag>
+          </div>
+          <p>重新开始后的继承结果以服务器持久进度为准。</p>
+        </section>
         <section>
           <h3>当前状态</h3>
           <el-empty
@@ -708,6 +770,24 @@ onMounted(loadPage);
 }
 .snapshots section + section {
   margin-top: 24px;
+}
+.route-progress {
+  padding: 14px;
+  border: 1px solid #dfe5df;
+  border-radius: 10px;
+  background: #fff;
+}
+.progress-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.route-progress p {
+  margin: 10px 0 0;
+  color: #7d8882;
+  font-size: 12px;
+  line-height: 1.55;
 }
 .snapshots dl div {
   display: flex;

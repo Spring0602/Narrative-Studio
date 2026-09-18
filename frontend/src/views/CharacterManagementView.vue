@@ -49,13 +49,7 @@ const filteredCharacters = computed(() => {
   const normalizedKeyword = keyword.value.trim().toLocaleLowerCase();
   if (!normalizedKeyword) return activeCharacters.value;
   return activeCharacters.value.filter((character) =>
-    [
-      character.name,
-      character.summary,
-      character.personality,
-      character.goal,
-      character.valueOrder,
-    ].some((value) => value?.toLocaleLowerCase().includes(normalizedKeyword)),
+    character.name.toLocaleLowerCase().includes(normalizedKeyword),
   );
 });
 
@@ -193,7 +187,7 @@ async function removeCharacter(character: CharacterSummary) {
 
   try {
     await ElMessageBox.confirm(
-      `确定要删除角色档案“${character.name}”吗？删除后将不再出现在角色列表中。`,
+      `确定要删除角色档案“${character.name}”吗？如果该角色仍被角色关系、知识记录或剧情节点引用，系统会阻止删除，请先解除关联。`,
       "删除角色档案",
       {
         confirmButtonText: "确定删除",
@@ -264,7 +258,7 @@ onMounted(load);
       <el-input
         v-model="keyword"
         clearable
-        placeholder="搜索姓名、简介、性格、目标或价值排序"
+        placeholder="搜索角色名"
         class="keyword-input"
       />
       <span class="result-count"
@@ -350,7 +344,7 @@ onMounted(load);
         v-else
         :description="
           activeCharacters.length
-            ? '没有符合搜索条件的角色'
+            ? '没有符合名称搜索条件的角色'
             : '当前项目暂无角色档案'
         "
       />

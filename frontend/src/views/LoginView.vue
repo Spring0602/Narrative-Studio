@@ -30,9 +30,10 @@ async function submit() {
   }
   if (
     !isLogin.value &&
-    (form.password.length < 8 || form.password.length > 72)
+    (form.password.length < 8 ||
+      new TextEncoder().encode(form.password).length > 72)
   ) {
-    ElMessage.warning("密码须为 8 至 72 个字符");
+    ElMessage.warning("密码至少 8 个字符，且 UTF-8 编码不能超过 72 字节");
     return;
   }
 
@@ -173,7 +174,7 @@ async function submit() {
               type="password"
               show-password
               :autocomplete="isLogin ? 'current-password' : 'new-password'"
-              :placeholder="isLogin ? '请输入密码' : '至少 8 个字符'"
+              :placeholder="isLogin ? '请输入密码' : '至少 8 个字符，最多 72 字节'"
               maxlength="72"
               size="large"
             />

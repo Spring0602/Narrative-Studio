@@ -47,5 +47,8 @@ public final class StoryGraphDtos {
     public record BatchPositionsRequest(
             @NotEmpty @Size(max = 500) List<@NotNull @Valid PositionItem> positions) {}
 
+    public record BatchNodesRequest(
+            @NotEmpty @Size(max = 200) List<@Valid NodeRequest> nodes) {}
+
     public record Graph(List<NodeSummary> nodes, List<ChoiceSummary> choices) {}
 }

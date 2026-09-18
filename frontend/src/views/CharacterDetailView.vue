@@ -509,10 +509,10 @@ onMounted(async () => {
         ><el-form-item label="知识等级" required
           ><el-select v-model="knowledgeForm.knowledgeLevel"
             ><el-option label="UNKNOWN" value="UNKNOWN" /><el-option
-              label="SUSPECTED"
-              value="SUSPECTED" /><el-option
               label="KNOWN"
-              value="KNOWN" /></el-select></el-form-item
+              value="KNOWN" /><el-option
+              label="FORGOTTEN"
+              value="FORGOTTEN" /></el-select></el-form-item
         ><el-form-item label="获得节点"
           ><el-select
             v-model="knowledgeForm.acquiredNodeId"

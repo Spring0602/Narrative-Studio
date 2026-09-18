@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { apiErrorMessage } from "@/api/errors";
+import { exportStory } from "@/api/extensions";
 import {
   archiveProject,
   getProject,
@@ -61,6 +62,7 @@ const loading = ref(true);
 const loadError = ref("");
 const saving = ref(false);
 const archiving = ref(false);
+const exportingStory = ref(false);
 const editVisible = ref(false);
 const editForm = reactive({ name: "", description: "" });
 
@@ -83,9 +85,9 @@ async function loadProject() {
     project.value = {
       id: projectId.value || 1,
       name: "叙事工坊演示项目",
-      description: "本地界面预览，用于检查页面布局、导航与图标显示。",
+      description: "本地可编辑预览，用于测试页面布局、导航与交互功能。",
       ownerId: 0,
-      status: "ARCHIVED",
+      status: "ACTIVE",
       memberRole: "OWNER",
       updatedAt: new Date().toISOString(),
     };
@@ -162,6 +164,32 @@ async function archiveCurrentProject() {
     ElMessage.error(apiErrorMessage(error, "归档项目失败"));
   } finally {
     archiving.value = false;
+  }
+}
+
+function safeFileName(value: string) {
+  return value.replace(/[<>:"/\\|?*\u0000-\u001f]/g, "_").trim() || "story";
+}
+
+async function exportStoryJson() {
+  if (!project.value || exportingStory.value) return;
+  exportingStory.value = true;
+  try {
+    const storyDocument = await exportStory(project.value.id);
+    const blob = new Blob([JSON.stringify(storyDocument, null, 2)], {
+      type: "application/json;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${safeFileName(project.value.name)}-剧情导出.json`;
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    ElMessage.success("剧情 JSON 已导出");
+  } catch (error) {
+    ElMessage.error(apiErrorMessage(error, "剧情 JSON 导出失败"));
+  } finally {
+    exportingStory.value = false;
   }
 }
 
@@ -279,6 +307,9 @@ onMounted(loadProject);
             >
           </div>
           <div class="project-actions">
+            <el-button :loading="exportingStory" @click="exportStoryJson">
+              导出剧情 JSON
+            </el-button>
             <el-button
               v-if="canEditProject"
               type="primary"

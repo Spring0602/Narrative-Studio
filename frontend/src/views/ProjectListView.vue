@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { defineAsyncComponent, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { apiErrorMessage } from "@/api/errors";
+import { importStory, type StoryDocument } from "@/api/extensions";
 import {
   createProject,
   listProjects,
@@ -11,6 +13,8 @@ import {
 const router = useRouter();
 const ExcelImportDialog = defineAsyncComponent(() => import("@/components/ExcelImportDialog.vue"));
 const excelVisible = ref(false);
+const jsonFileInput = ref<HTMLInputElement | null>(null);
+const jsonImporting = ref(false);
 const projects = ref<ProjectSummary[]>([]);
 const loading = ref(true);
 const dialogVisible = ref(false);
@@ -55,6 +59,49 @@ function logout() {
   router.push("/login");
 }
 
+function chooseStoryJson() {
+  jsonFileInput.value?.click();
+}
+
+async function handleStoryJson(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = "";
+  if (!file) return;
+  if (!/\.json$/i.test(file.name) || file.size > 5 * 1024 * 1024)
+    return void ElMessage.warning("请选择不超过 5MB 的 JSON 文件");
+
+  let document: StoryDocument;
+  try {
+    const parsed = JSON.parse(await file.text()) as unknown;
+    if (!parsed || typeof parsed !== "object") throw new Error();
+    document = parsed as StoryDocument;
+  } catch {
+    return void ElMessage.error("JSON 文件格式无效");
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      "导入剧情 JSON 会创建一个新项目，不会覆盖现有项目。确定继续吗？",
+      "导入剧情 JSON",
+      { type: "warning", confirmButtonText: "创建新项目" },
+    );
+  } catch {
+    return;
+  }
+
+  jsonImporting.value = true;
+  try {
+    const project = await importStory(document);
+    ElMessage.success("剧情 JSON 已导入为新项目");
+    await router.push(`/projects/${project.id}?module=story`);
+  } catch (error) {
+    ElMessage.error(apiErrorMessage(error, "剧情 JSON 导入失败"));
+  } finally {
+    jsonImporting.value = false;
+  }
+}
+
 onMounted(load);
 </script>
 
@@ -82,10 +129,22 @@ onMounted(load);
           </div>
           <p class="muted">从结构化设定开始，逐步搭出一条能走通的故事。</p>
         </div>
-        <el-button size="large" @click="excelVisible = true">从 Excel 生成剧情图</el-button>
-        <el-button type="primary" size="large" @click="dialogVisible = true"
-          >新建项目</el-button
-        >
+        <div class="heading-actions">
+          <input
+            ref="jsonFileInput"
+            class="file-input"
+            type="file"
+            accept=".json,application/json"
+            @change="handleStoryJson"
+          />
+          <el-button size="large" :loading="jsonImporting" @click="chooseStoryJson">
+            导入剧情 JSON
+          </el-button>
+          <el-button size="large" @click="excelVisible = true">从 Excel 生成剧情图</el-button>
+          <el-button type="primary" size="large" @click="dialogVisible = true">
+            新建项目
+          </el-button>
+        </div>
       </div>
       <el-skeleton v-if="loading" :rows="5" animated />
       <div v-else-if="projects.length" class="project-grid">
@@ -131,3 +190,15 @@ onMounted(load);
     </el-dialog>
   </div>
 </template>
+
+<style scoped>
+.heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.file-input {
+  display: none;
+}
+</style>
