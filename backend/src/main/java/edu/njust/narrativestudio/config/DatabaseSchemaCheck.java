@@ -21,9 +21,10 @@ public class DatabaseSchemaCheck implements ApplicationRunner {
                 "release_id FROM playtest_session","knowledge_before,knowledge_after FROM playtest_step",
                 "step_id FROM test_feedback","persistence_scope FROM state_variable","unlock_rule FROM story_choice",
                 "progress_before,progress_after FROM playtest_step",
-                "project_id,tester_id,version_key,revision,progress_json FROM player_progress")) db.queryForList("SELECT "+columns+" WHERE 1=0");
+                "project_id,tester_id,version_key,revision,progress_json FROM player_progress",
+                "project_id,saved_by,save_kind,auto_slot,revision,label,content_hash,content_snapshot,saved_at FROM project_save")) db.queryForList("SELECT "+columns+" WHERE 1=0");
         } catch(org.springframework.dao.DataAccessException ex) {
-            throw new IllegalStateException("数据库缺少21表/跨模拟进度扩展或无法读取。请核对 DB_URL 和权限，按 database/database-design/README.md 备份并验证 progression-extension.sql 后升级；应用不会自动执行DDL。",ex);
+            throw new IllegalStateException("数据库缺少22表/保存历史扩展或无法读取。请核对 DB_URL 和权限，按 database/database-design/README.md 先完成 progression-extension.sql，再备份验证 history-extension.sql；应用不会自动执行DDL。",ex);
         }
     }
 }

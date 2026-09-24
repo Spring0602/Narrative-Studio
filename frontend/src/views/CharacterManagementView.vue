@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useEditorDraft } from "@/composables/editorDrafts";
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -224,6 +225,7 @@ function formatUpdatedAt(value: string) {
     : date.toLocaleString("zh-CN", { hour12: false });
 }
 
+useEditorDraft({project:()=>projectId.value,slot:"character",module:"characters",label:"角色编辑",entityTable:"character_profile",active:()=>dialogVisible.value,enabled:()=>canEditCharacters.value,entityId:()=>editingCharacterId.value,read:()=>({...form}),restore:d=>{Object.assign(form,d.values);editingCharacterId.value=d.entityId;dialogMode.value=d.entityId?"edit":"create";dialogVisible.value=true;}});
 onMounted(load);
 </script>
 

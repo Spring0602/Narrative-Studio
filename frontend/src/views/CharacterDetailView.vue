@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useEditorDraft } from "@/composables/editorDrafts";
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -45,6 +46,8 @@ const knowledge = ref<CharacterKnowledge[]>([]);
 const selectedCharacterId = ref<number | null>(null);
 const selectedNodeId = ref<number | null>(null);
 const castIds = ref<number[]>([]);
+const castLoading = ref(false);
+const pendingCast = ref<{nodeId:number;characters:{characterId:number}[]}|null>(null);
 const loading = ref(true);
 const loadError = ref("");
 const saving = ref(false);
@@ -98,14 +101,27 @@ async function loadKnowledge() {
   }
 }
 async function loadCast() {
+  const nodeId=selectedNodeId.value;
+  castLoading.value=true;
   if (!selectedNodeId.value) {
     castIds.value = [];
+    castLoading.value=false;
     return;
   }
   try {
-    castIds.value = await getNodeCast(projectId.value, selectedNodeId.value);
+    const result=await getNodeCast(projectId.value, selectedNodeId.value);
+    if(nodeId!==selectedNodeId.value)return;
+    castIds.value = result;
   } catch (error) {
     ElMessage.error(apiErrorMessage(error, "节点出场角色加载失败"));
+  } finally {
+    if(nodeId===selectedNodeId.value){
+      castLoading.value=false;
+      if(pendingCast.value?.nodeId===nodeId){
+        castIds.value=pendingCast.value.characters.map(c=>c.characterId);
+        pendingCast.value=null;
+      }
+    }
   }
 }
 watch(selectedCharacterId, loadKnowledge);
@@ -279,6 +295,7 @@ async function saveCast() {
       castIds.value,
     );
     ElMessage.success("节点出场角色已保存");
+    castDraft.markSaved();
   } catch (error) {
     ElMessage.error(apiErrorMessage(error, "出场角色保存失败"));
   } finally {
@@ -286,6 +303,13 @@ async function saveCast() {
   }
 }
 
+useEditorDraft({project:()=>projectId.value,slot:"relation",module:"character-details",label:"角色关系编辑",entityTable:"character_relation",active:()=>relationVisible.value,enabled:()=>canEdit.value,entityId:()=>editingRelationId.value,read:()=>({...relationForm}),restore:d=>{Object.assign(relationForm,d.values);editingRelationId.value=d.entityId;relationMode.value=d.entityId?"edit":"create";relationVisible.value=true;}});
+useEditorDraft({project:()=>projectId.value,slot:"knowledge",module:"character-details",label:"角色知识编辑",entityTable:"character_knowledge",active:()=>knowledgeVisible.value,enabled:()=>canEdit.value,entityId:()=>editingKnowledgeId.value,read:()=>({form:{...knowledgeForm},characterId:selectedCharacterId.value}),restore:d=>{Object.assign(knowledgeForm,d.values.form);selectedCharacterId.value=d.values.characterId;editingKnowledgeId.value=d.entityId;knowledgeMode.value=d.entityId?"edit":"create";knowledgeVisible.value=true;}});
+const castDraft=useEditorDraft({project:()=>projectId.value,slot:"cast",module:"character-details",label:"节点出场角色",entityTable:"story_node",
+  active:()=>!!selectedNodeId.value&&!castLoading.value,retainWhenInactive:()=>castLoading.value,
+  enabled:()=>canEdit.value,entityId:()=>selectedNodeId.value,
+  read:()=>({nodeId:selectedNodeId.value,characters:castIds.value.map(characterId=>({characterId}))}),
+  restore:d=>{pendingCast.value=d.values as {nodeId:number;characters:{characterId:number}[]};if(selectedNodeId.value===d.values.nodeId)void loadCast();else selectedNodeId.value=d.values.nodeId;}});
 onMounted(async () => {
   await loadBase();
   await Promise.all([loadKnowledge(), loadCast()]);

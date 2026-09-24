@@ -7,7 +7,7 @@
 | 状态 | 内容 |
 |---|---|
 | 已实现 | 注册、登录、JWT、统一响应与异常、项目 CRUD、成员管理、世界观条目、角色档案与剧情图后端 CRUD、状态变量/条件/效果与规则引擎、模拟会话/状态快照/回放/重开后端、权限及引用校验、前端登录与项目工作台 |
-| 数据库 | MySQL+SQL+Navicat；原20表基础上增加跨局进度，当前需要21表及对应扩展列 |
+| 数据库 | MySQL+SQL+Navicat；当前需要22表（含跨局进度和项目保存历史）及对应扩展列 |
 | Excel生成剧情图 | 支持xlsx/xls、单表/双表、自定义表头与类型映射、预览及自动布局；仅新建项目或导入空图，不覆盖已有剧情；AI生成Excel暂缓。见[使用说明](docs/15-Excel剧情图导入说明.md) |
 | 9月17日复杂解锁 | SESSION/PROFILE变量、跨模拟通关与访问记录、嵌套前置规则、测试清档和预置；详见[配置与迁移说明](docs/14-跨模拟进度与复杂解锁说明.md) |
 | 本轮补齐的后端 | 角色关系/知识、节点出场角色、草稿转正、结构检测/问题处理、反馈、发布版本试玩、知识快照、邮箱验证/找回/改密、JWT 撤销、管理员用户状态 |
@@ -36,7 +36,7 @@
 ### 2. 初始化数据库（Navicat）
 
 1. 在 Navicat 中新建 MySQL 连接并确认服务可用。
-2. 按 [数据库升级说明](database/database-design/README.md) 准备21表数据库：17表基线 → schema-extension.sql → progression-extension.sql。已有20表库只执行跨局进度增量一次，不要重复执行旧扩展；先备份并在隔离库验证。
+2. 按 [数据库升级说明](database/database-design/README.md) 准备22表数据库：17表基线 → schema-extension.sql → progression-extension.sql → history-extension.sql。已有21表库只执行历史保存增量一次，不要重复执行旧扩展；先备份并在隔离库验证。
 3. 原 `schema.sql` 和 `demo_story.sql` 固定选择 `narrative_studio`；独立测试库须使用修改建库/选库名称后的副本。演示脚本仍是未闭环的最小样例，不是完整验收数据。
 4. 由 PowerShell 或 IDE 注入 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD`，明确指向已验证的数据库；Spring Boot 不自动读取仓库 `.env`。
 5. 新后端启动进行只读结构检查；缺少扩展会明确报错，不自动执行 DDL。

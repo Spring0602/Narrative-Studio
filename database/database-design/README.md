@@ -2,7 +2,13 @@
 
 C接手操作请先阅读[成员C数据库修改与验收指南](../../docs/16-成员C数据库修改与验收指南.md)，按备份、独立库迁移、结构核验、业务验收与团队复核顺序执行；指南附交接回报模板。
 
-当前（2026-09-17）后端要求21表：17表基线 + schema-extension.sql 的3表扩展 + progression-extension.sql 的 player_progress 表及4个新列。下方20表内容保留为第一阶段迁移说明，不是当前完整部署要求。
+当前（2026-09-24）后端要求22表：17表基线 + schema-extension.sql 的3表扩展 + progression-extension.sql 的 player_progress 表及4个新列 + history-extension.sql 的 project_save 表。下方20/21表内容保留为前阶段迁移说明，不是当前完整部署要求。
+
+## 历史保存增量（当前必需）
+
+已有21表库先备份并停止写入，在独立测试库执行 history-extension.sql 一次，再运行只读 verify-history.sql（同时保留前两份 verify 核验）。新增 project_save 保存项目共享5份手动版本和每用户1份自动草稿；自动草稿通过 (project_id,auto_slot) 唯一键隔离，手动 auto_slot 为 NULL。无需修改或清空旧数据。新库按基线、旧扩展、跨局扩展、历史扩展依次执行。
+
+这不是已执行迁移的报告，本轮未改动真实MySQL。完整语义、限制和A/B/C验收见[历史保存与自动草稿说明](../../docs/17-历史保存与自动草稿说明.md)。
 
 ## 跨局进度增量（当前必需）
 

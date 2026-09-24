@@ -40,3 +40,12 @@ CREATE TABLE IF NOT EXISTS player_progress (
   FOREIGN KEY(project_id) REFERENCES narrative_project(id) ON DELETE CASCADE,
   FOREIGN KEY(tester_id) REFERENCES sys_user(id) ON DELETE CASCADE
 );
+CREATE TABLE IF NOT EXISTS project_save (
+ id BIGINT AUTO_INCREMENT PRIMARY KEY, project_id BIGINT NOT NULL, saved_by BIGINT NOT NULL,
+ save_kind VARCHAR(16) NOT NULL, auto_slot BIGINT NULL, revision BIGINT NOT NULL DEFAULT 1,
+ label VARCHAR(100) NOT NULL, content_hash CHAR(64) NOT NULL, content_snapshot JSON NOT NULL,
+ saved_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ UNIQUE(project_id,auto_slot),
+ FOREIGN KEY(project_id) REFERENCES narrative_project(id) ON DELETE CASCADE,
+ FOREIGN KEY(saved_by) REFERENCES sys_user(id)
+);

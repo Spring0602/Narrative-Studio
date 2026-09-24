@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useEditorDraft } from "@/composables/editorDrafts";
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -233,6 +234,7 @@ async function remove(variable: StateVariable) {
   }
 }
 
+useEditorDraft({project:()=>projectId.value,slot:"variable",module:"variables",label:"状态变量编辑",entityTable:"state_variable",active:()=>dialogVisible.value,enabled:()=>canEdit.value,entityId:()=>editingId.value,read:()=>({...form}),restore:d=>{Object.assign(form,d.values);editingId.value=d.entityId;dialogMode.value=d.entityId?"edit":"create";dialogVisible.value=true;}});
 onMounted(loadVariables);
 </script>
 

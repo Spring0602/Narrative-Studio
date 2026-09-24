@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useEditorDraft } from "@/composables/editorDrafts";
 import { computed, ref, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { apiErrorMessage } from "@/api/errors";
@@ -41,6 +42,7 @@ const emit = defineEmits<{
   "update:modelValue": [value: boolean];
   saved: [summary: RuleSummary];
   loaded: [summary: RuleSummary];
+  "restore-context": [choiceId:number];
 }>();
 
 const visible = computed({
@@ -56,6 +58,7 @@ const loading = ref(false);
 const saving = ref(false);
 const loadError = ref("");
 let nextClientId = 1;
+const pendingRecovery = ref<Record<string,any>|null>(null);
 
 const integerConditionOperators: ConditionInput["operator"][] = [
   "EQ",
@@ -148,9 +151,19 @@ async function loadRules() {
     loadError.value = apiErrorMessage(error, "规则加载失败，请重试。");
   } finally {
     loading.value = false;
+    if(pendingRecovery.value&&!loadError.value){
+      conditions.value=(pendingRecovery.value.conditions??[]).map(createConditionRow);
+      effects.value=(pendingRecovery.value.effects??[]).map(createEffectRow);
+      unlockRule.value=pendingRecovery.value.unlockRule??null;
+      pendingRecovery.value=null;
+    }
   }
 }
 
+useEditorDraft({project:()=>props.projectId,slot:"rules",module:"story",label:"选项条件与效果编辑",entityTable:"story_choice",
+  active:()=>visible.value&&!loading.value,retainWhenInactive:()=>loading.value,enabled:()=>!props.readonly,entityId:()=>props.choiceId,
+  read:()=>({choiceId:props.choiceId,nodeId:props.nodeId,conditions:conditions.value.map(({clientId,...r})=>r),effects:effects.value.map(({clientId,...r})=>r),unlockRule:unlockRule.value}),
+  restore:d=>{pendingRecovery.value=d.values;if(d.entityId)emit("restore-context",d.entityId);}});
 watch([() => props.modelValue, () => props.choiceId], ([isVisible]) => {
   if (isVisible) void loadRules();
 });

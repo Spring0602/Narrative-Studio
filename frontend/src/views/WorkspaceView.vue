@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { useEditorDraft } from "@/composables/editorDrafts";
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { apiErrorMessage } from "@/api/errors";
 import { exportStory } from "@/api/extensions";
+import ProjectSaveBar from "@/components/ProjectSaveBar.vue";
 import {
   archiveProject,
   getProject,
@@ -37,7 +39,8 @@ const projectId = computed(() => Number(route.params.id));
 const isPreviewMode = computed(
   () => import.meta.env.DEV && route.query.preview === "1",
 );
-const activeModule = ref(route.query.module === "story" ? "story" : "overview");
+const allowedRecoveryModules=["overview","story","world","characters","character-details","variables"];
+const activeModule = ref(allowedRecoveryModules.includes(String(route.query.module)) ? String(route.query.module) : "overview");
 const focusedStoryNodeId = ref<number | null>(null);
 const modules = [
   { key: "overview", label: "项目概览", icon: compassIcon },
@@ -193,6 +196,7 @@ async function exportStoryJson() {
   }
 }
 
+useEditorDraft({project:()=>projectId.value,slot:"project",module:"overview",label:"项目资料编辑",entityTable:"narrative_project",active:()=>editVisible.value,enabled:()=>canEditProject.value,entityId:()=>projectId.value,read:()=>({...editForm}),restore:d=>{Object.assign(editForm,d.values);editVisible.value=true;}});
 onMounted(loadProject);
 </script>
 
@@ -221,6 +225,7 @@ onMounted(loadProject);
       </nav>
     </aside>
     <main>
+      <ProjectSaveBar v-if="project&&!loading&&!loadError" :key="projectId" :project-id="projectId" :can-edit="canEditProject" :preview-mode="isPreviewMode" @navigate="module=>{if(allowedRecoveryModules.includes(module))activeModule=module;}" />
       <el-skeleton v-if="loading" :rows="7" animated />
       <el-result
         v-else-if="loadError"

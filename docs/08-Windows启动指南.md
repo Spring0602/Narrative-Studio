@@ -2,7 +2,7 @@
 
 Excel导入已加入：后端新增Apache POI依赖，更新代码后重新Maven构建并重启前后端；不需要额外服务或Docker。文件上限5MB、请求上限6MB，若有反向代理也应核对上传限制。使用入口及表格规范见[Excel剧情图导入说明](15-Excel剧情图导入说明.md)。
 
-2026-09-17 启动前置更新：当前需要21表及新增进度列。已有20表库先备份，在隔离库验证 database/database-design/progression-extension.sql，再执行一次；新库依次执行基线、旧扩展、跨局扩展。不要重复运行ALTER；后端不自动迁移，不使用Docker。运行两份只读verify脚本后再启动。详细见[数据库升级说明](../database/database-design/README.md)。下文20表步骤仅是前一阶段。
+2026-09-24 启动前置更新：当前需要22表及新增进度列。已有21表库先备份，在隔离库验证 database/database-design/history-extension.sql，再执行一次；已有20表库先补跨局扩展。新库依次执行基线、旧扩展、跨局扩展、历史保存扩展。不要重复运行DDL；后端不自动迁移，不使用Docker。运行三份只读verify脚本后再启动。详细见[数据库升级说明](../database/database-design/README.md)。下文20表步骤仅是前一阶段。
 
 ## 推荐安装
 

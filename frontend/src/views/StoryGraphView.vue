@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useEditorDraft } from "@/composables/editorDrafts";
 import { loadAllPages } from "@/api/pagination";
 import {
   computed,
@@ -901,14 +902,24 @@ const draftLoading = ref(false);
 const draftSavingId = ref<number | null>(null);
 const draftTargets = reactive<Record<number, number>>({});
 const newDraft = reactive({ sourceNodeId: 0, choiceText: "", sortOrder: 0 });
+const pendingDraftRows=ref<Record<string,any>[]|null>(null);
 async function loadDrafts() {
+  let loaded=false;
   draftLoading.value = true;
   try {
     drafts.value = (await loadAllPages((page, size) => listChoiceDrafts(projectId.value, page, size))).items;
+    loaded=true;
   } catch (error) {
     ElMessage.error(apiErrorMessage(error, "选项草稿加载失败"));
   } finally {
     draftLoading.value = false;
+    if(loaded&&pendingDraftRows.value){
+      for(const saved of pendingDraftRows.value){
+        const row=drafts.value.find(d=>d.id===saved.draftId);
+        if(row){row.sourceNodeId=saved.sourceNodeId;row.choiceText=saved.choiceText;row.sortOrder=saved.sortOrder;draftTargets[row.id]=saved.targetNodeId;}
+      }
+      pendingDraftRows.value=null;
+    }
   }
 }
 async function openDrafts() {
@@ -990,6 +1001,13 @@ async function promoteDraft(draft: ChoiceDraft) {
   }
 }
 
+useEditorDraft({project:()=>projectId.value,slot:"node",module:"story",label:"剧情节点编辑",entityTable:"story_node",active:()=>nodeDialogVisible.value,enabled:()=>canEdit.value,entityId:()=>editingNodeId.value,read:()=>({...nodeForm}),restore:d=>{Object.assign(nodeForm,d.values);editingNodeId.value=d.entityId;nodeDialogMode.value=d.entityId?"edit":"create";nodeDialogVisible.value=true;}});
+useEditorDraft({project:()=>projectId.value,slot:"choice",module:"story",label:"剧情选项编辑",entityTable:"story_choice",active:()=>choiceDialogVisible.value,enabled:()=>canEdit.value,entityId:()=>editingChoiceId.value,read:()=>({...choiceForm}),restore:d=>{Object.assign(choiceForm,d.values);editingChoiceId.value=d.entityId;choiceDialogMode.value=d.entityId?"edit":"create";choiceDialogVisible.value=true;}});
+useEditorDraft({project:()=>projectId.value,slot:"new-choice-draft",module:"story",label:"未提交新选项草稿",entityTable:"story_choice_draft",active:()=>draftVisible.value,enabled:()=>canEdit.value,entityId:()=>null,read:()=>({...newDraft}),restore:d=>{Object.assign(newDraft,d.values);draftVisible.value=true;}});
+useEditorDraft({project:()=>projectId.value,slot:"choice-draft-rows",module:"story",label:"选项草稿列表编辑",entityTable:"story_choice_draft",
+  active:()=>draftVisible.value&&!draftLoading.value,retainWhenInactive:()=>draftLoading.value,enabled:()=>canEdit.value,entityId:()=>null,
+  read:()=>({rows:drafts.value.map(d=>({draftId:d.id,sourceNodeId:d.sourceNodeId,choiceText:d.choiceText,sortOrder:d.sortOrder,targetNodeId:draftTargets[d.id]??null}))}),
+  restore:d=>{pendingDraftRows.value=d.values.rows;draftVisible.value=true;void loadDrafts();}});
 onMounted(loadGraph);
 </script>
 
@@ -1488,6 +1506,7 @@ onMounted(loadGraph);
       :readonly="!canEdit"
       @loaded="onRulesSummary"
       @saved="onRulesSummary"
+      @restore-context="async id=>{await loadGraph();selectedChoiceId=id;ruleDialogVisible=true;}"
     />
   </section>
 </template>
