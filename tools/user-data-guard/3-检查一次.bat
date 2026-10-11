@@ -21,10 +21,6 @@ if not defined PY (
   pause
   exit /b 1
 )
-echo [guard] python = %PY%
-echo [guard] monitoring... (close this window or press Ctrl+C to stop)
+%PY% guard.py check
 echo.
-%PY% guard.py watch
-echo.
-echo [guard] stopped. press any key to close.
-pause >nul
+pause
