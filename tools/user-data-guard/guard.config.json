@@ -1,0 +1,30 @@
+{
+  "_说明": "本文件由「1-填配置.bat」生成，通常只需要改 password（数据库密码）和 target_db（要保护的库名）。",
+  "host": "127.0.0.1",
+  "port": 3306,
+  "user": "root",
+  "password": "",
+  "mysql_bin": "",
+  "mysqldump_bin": "",
+  "target_db": "narrative_studio",
+  "project_root": "",
+  "watch_interval_seconds": 15,
+  "user_tables": [
+    "sys_user",
+    "project_member",
+    "playtest_session",
+    "playtest_step",
+    "test_feedback",
+    "player_progress"
+  ],
+  "optional_user_tables": [
+    "project_save",
+    "account_action_token"
+  ],
+  "candidate_exclude": [
+    "information_schema",
+    "mysql",
+    "performance_schema",
+    "sys"
+  ]
+}
