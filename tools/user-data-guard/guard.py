@@ -1,61 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-用户数据守护（user-data-guard）v2
-================================================================
-解决的问题
-----------------------------------------------------------------
-项目更新（换了一版代码 / 重新执行了建表脚本 / 换了一个数据库）时，
-数据库里的「用户数据」——账号、项目成员关系、模拟测试记录、测试反馈、
-跨局进度——很容易被新版本清空或覆盖，而且往往直到登录时才发现。
+"""用户数据守护 v3：只读检测与人工确认的同库缺失行恢复。
 
-本工具做三件事：
-  1) 保险箱（vault）：把当前库里的「用户数据 + 用户相关记录」抽出来存成本地快照
-     （含行数与内容指纹）；
-  2) 检测：每次运行都和保险箱比对，判断这次更新是否「动了用户数据」；
-  3) 搬运（需人工确认）：把保险箱里的用户数据搬回**白名单内的**目标库，
-     写库前强制备份、写库前先做身份与关联核验，只搬用户相关表。
-
-与其他表无关：剧情节点、选项、世界观、角色等「作品内容」不在搬运范围内。
-
-安全设计（v2 重点，针对代码审计意见逐条收紧）
-----------------------------------------------------------------
-* **只认白名单**：只检测/搬运 `target_dbs` 里明确列出的库，
-  **不再自动扫描"所有含 sys_user 的库"**（避免往无关库写用户数据）。
-* **告警与灾难分开**：
-  - 硬信号（灾难 WIPED）：目标库不存在、用户表被重建消失、`sys_user` 被清零；
-  - 软信号（告警 ALERT）：数量发生变化（正常删成员 / 清测试数据也会出现），
-    只报警，**不触发恢复**。
-* **身份与关联核验**：搬运前按业务键（`sys_user.username`、`narrative_project.name`）
-  重建「旧 id → 新 id」映射；id 被别的对象占用、或子记录引用的项目/节点/会话
-  在新库中不存在时，**默认直接中止**（`--on-conflict abort`），不会写出错绑数据。
-* **不关外键检查**：默认保持 `FOREIGN_KEY_CHECKS=1`，让约束兜底；
-  仅当显式加 `--disable-fk-checks` 才关闭（不推荐）。
-* **搬运默认要人工确认**：非交互环境（定时任务）必须显式 `--yes`；
-  常驻监控默认**只报警**，只有显式 `--auto-restore` 才会自动搬运。
-* **快照必须完整**：写库前校验 `user_data.json` 是否存在、行数与指纹是否与
-  `vault.json` 一致；快照缺失/损坏/为空一律判失败，不会"什么都没搬"却报成功。
-* **写库后核验**：搬运后逐表比对 before/after，未达到预期即报失败。
-* **凭据不入库**：真实配置写在 `guard.config.local.json`（已 gitignore），
-  仓库里只保留不含密码的模板 `guard.config.json`。
-
-设计原则
-----------------------------------------------------------------
-* 不依赖任何第三方 Python 包（只用标准库 + 本机 mysql.exe / mysqldump.exe）
-* 写库前必须先备份；搬运默认 `INSERT IGNORE`（新数据优先，只补缺失行）
-* 新版本结构变化（新增列）时自动做列映射，只写两边都有的列
-* 所有动作都写日志：logs/ 目录
-
-常用命令
-----------------------------------------------------------------
-  python guard.py init                  # 建保险箱（第一次用先跑这个）
-  python guard.py check                 # 检测一次：用户数据有没有被动
-  python guard.py check --json          # 同上，外加 JSON 输出
-  python guard.py restore               # 把保险箱的用户数据搬回目标库（会先问一句）
-  python guard.py restore --dry-run     # 只核验、不写库
-  python guard.py watch                 # 常驻监控，默认只报警
-  python guard.py watch --auto-restore  # 常驻监控，灾难时自动搬运（白名单内）
-  python guard.py status                # 看当前状态摘要
+保留 C 的白名单、配置隔离与完整性检查；恢复由 safe_recovery 实现。
+不支持跨库 ID 猜测映射，不覆盖已有行，不关闭外键，不自动恢复。
+init/restore 必须在停写维护窗口操作；旧快照保留，不在数据丢失后重建。
+完整使用边界与离线测试命令见 README.md。
 """
 
 from __future__ import annotations
@@ -109,10 +59,9 @@ DEFAULT_CONFIG = {
     "target_dbs": [],
     # ★ 不再自动发现「所有含 sys_user 的库」（默认关闭；即使打开，也仅用于只读检测提示）
     "watch_discover": False,
-    # ★ 常驻监控默认只报警；显式改成 true（或加 --auto-restore）才会自动搬运
+    # 常驻监控仅报警；旧 auto_restore 配置不再启用自动写入
     "auto_restore": False,
-    # ★ 冲突处置：abort=发现身份/关联冲突就中止（默认，最安全）
-    #            skip=跳过冲突行与孤立记录，继续搬运其余部分
+    # 冲突直接中止，旧 skip 参数只保留用于返回明确错误
     "on_conflict": "abort",
     # 留空不影响使用，只用于在检测结果里附带显示代码版本（真实值在本地配置里）
     "project_root": "",
@@ -149,17 +98,6 @@ TABLE_ORDER = [
     "account_action_token",
 ]
 
-# 业务唯一键：用来跨库判断「是不是同一个对象」
-BUSINESS_KEYS: dict[str, list[str]] = {
-    "sys_user": ["username"],
-    "narrative_project": ["name"],
-    "playtest_session": ["project_id", "tester_id", "started_at"],
-    "playtest_step": ["session_id", "step_no"],
-    "test_feedback": ["project_id", "session_id", "title"],
-    "player_progress": ["project_id", "tester_id", "version_key"],
-    "project_member": ["project_id", "user_id"],
-}
-
 # 外键列 → 父表。搬运时这些列要跟着做映射 / 存在性核验
 FK_PARENT: dict[str, str] = {
     "user_id": "sys_user",
@@ -177,13 +115,12 @@ FK_PARENT: dict[str, str] = {
     "release_id": "story_release",
 }
 
-# 本轮会被「写回」的表（这些表的 id 映射来自快照本身）
-WRITTEN_TABLES = {"sys_user", "playtest_session", "playtest_step",
-                  "test_feedback", "player_progress", "project_member",
-                  "project_save", "account_action_token"}
-
-# 只做存在性核验的「作品内容」表（本工具不搬它们的内容）
-CONTENT_TABLES = {"narrative_project", "story_node", "story_choice", "story_release"}
+# 作品内容指纹核验范围（只读，不恢复这些表）
+CONTENT_TABLES = {
+    "narrative_project", "story_node", "story_choice", "story_release",
+    "world_entry", "character_profile", "character_relation", "character_knowledge",
+    "node_character", "state_variable", "choice_condition", "state_effect", "story_choice_draft",
+}
 
 BINARY_TYPES = {"blob", "tinyblob", "mediumblob", "longblob", "binary", "varbinary", "bit"}
 
@@ -221,12 +158,12 @@ def load_config() -> dict:
         try:
             merged.update(json.loads(CONFIG_PATH.read_text(encoding="utf-8")))
         except Exception as exc:
-            print(f"⚠ 模板配置读不出来（已忽略）：{exc}")
+            raise RuntimeError(f"模板配置损坏，已停止：{exc}") from exc
     if local_exists:
         try:
             merged.update(json.loads(LOCAL_CONFIG_PATH.read_text(encoding="utf-8")))
         except Exception as exc:
-            print(f"⚠ 本地配置读不出来（已忽略）：{exc}")
+            raise RuntimeError(f"本地配置损坏，已停止：{exc}") from exc
 
     env_pwd = os.environ.get("GUARD_DB_PASSWORD")
     if env_pwd:
@@ -304,7 +241,7 @@ class MySql:
 
     def sql(self, statements: str, db: str | None = None, raw: bool = False) -> str:
         """执行 SQL，返回 stdout 文本。"""
-        args = self._base(self.mysql) + ["-N", "-B"] if raw else self._base(self.mysql)
+        args = self._base(self.mysql) + ["-N", "-B", "--raw"] if raw else self._base(self.mysql)
         if db:
             args.append(db)
         proc = subprocess.run(
@@ -482,8 +419,12 @@ def cmd_init(cfg: dict, mysql: MySql, args) -> int:
 
     available = set(mysql.tables(db))
     missing = [t for t in tables if t not in available]
+    if missing:
+        raise RuntimeError(f"Snapshot tables missing: {missing}")
     tables = [t for t in tables if t in available]
 
+    if VAULT_FILE.exists():
+        raise RuntimeError("Archive the existing vault before init; never overwrite a recovery snapshot after data loss.")
     VAULT_DIR.mkdir(parents=True, exist_ok=True)
     snap: dict[str, dict] = {}
     total = 0
@@ -494,7 +435,7 @@ def cmd_init(cfg: dict, mysql: MySql, args) -> int:
         total += info["count"]
         print(f"  · {table:<20} {info['count']:>5} 行  指纹 {info['hash'] or '-'}")
 
-    # 项目「id → 名称」索引：搬运时用它把旧项目的 id 按名称映射到新库
+    # 项目名称仅作为人工审查索引；恢复不使用名称映射 ID
     project_index: dict[str, str] = {}
     if "narrative_project" in available:
         proj_rows, _ = mysql.fetch_rows(db, "narrative_project")
@@ -502,8 +443,11 @@ def cmd_init(cfg: dict, mysql: MySql, args) -> int:
             if r.get("id") is not None:
                 project_index[str(r["id"])] = str(r.get("name") or "")
 
+    from safe_recovery import content_manifest
     vault = {
-        "version": 2,
+        "version": 3,
+        "source": {"host": str(cfg["host"]), "port": int(cfg["port"]), "database": db},
+        "content_manifest": content_manifest(sys.modules[__name__], mysql, db),
         "created_at": now_str(),
         "source_db": db,
         "tables_order": [t for t in TABLE_ORDER if t in snap] or list(snap),
@@ -512,7 +456,6 @@ def cmd_init(cfg: dict, mysql: MySql, args) -> int:
         "project_index": project_index,
         "code": code_version(cfg),
     }
-    VAULT_FILE.write_text(json.dumps(vault, ensure_ascii=False, indent=2), encoding="utf-8")
     (VAULT_DIR / "user_data.json").write_text(
         json.dumps({name: info["rows"] for name, info in snap.items()},
                    ensure_ascii=False, indent=1), encoding="utf-8")
@@ -524,11 +467,15 @@ def cmd_init(cfg: dict, mysql: MySql, args) -> int:
             "--order-by-primary", "--skip-comments", db, *tables,
         ]
         with VAULT_SQL.open("wb") as fh:
-            subprocess.run(args_dump, stdout=fh, stderr=subprocess.DEVNULL, check=False)
+            result = subprocess.run(args_dump, stdout=fh, stderr=subprocess.PIPE, check=False)
+        if result.returncode:
+            raise RuntimeError("SQL backup export failed; vault initialization incomplete.")
+
+    VAULT_FILE.write_text(json.dumps(vault, ensure_ascii=False, indent=2), encoding="utf-8")
 
     print(f"\n✓ 保险箱已生成：{VAULT_FILE}")
     print(f"  用户相关表 {len(tables)} 张，合计 {total} 行")
-    print(f"  项目索引 {len(project_index)} 条（用于跨库按名称对应项目）")
+    print(f"  项目索引 {len(project_index)} 条；已记录作品内容指纹，不按名称映射 ID")
     if missing:
         print(f"  ⚠ 这些表在库里不存在，已跳过：{', '.join(missing)}")
     print(f"  代码版本：{vault['code']['git_sha'][:8] or '未知'}"
@@ -694,22 +641,6 @@ def sql_literal(value, is_base64: bool = False) -> str:
     return f"'{text}'"
 
 
-def fill_value_for(col_info: dict) -> str | None:
-    """新版本新增的 NOT NULL 且无默认值的列，给一个安全的占位值。"""
-    if col_info["nullable"] or col_info["default"] is not None or "auto_increment" in col_info["extra"]:
-        return None
-    dtype = col_info["type"]
-    if dtype in {"int", "bigint", "smallint", "tinyint", "mediumint", "decimal", "float", "double"}:
-        return "0"
-    if dtype in {"datetime", "timestamp"}:
-        return "NOW()"
-    if dtype == "date":
-        return "'1970-01-01'"
-    if dtype in {"json"}:
-        return "'{}'"
-    return "''"
-
-
 def load_snapshot_rows(vault: dict) -> tuple[dict, list[str]]:
     """读取快照数据并做完整性校验；返回 (rows_by_table, problems)。"""
     problems: list[str] = []
@@ -733,395 +664,16 @@ def load_snapshot_rows(vault: dict) -> tuple[dict, list[str]]:
                 f"{table}：行数不符（vault.json 记录 {info.get('count')}，实际 {len(rows)}）")
             continue
         saved_hash = info.get("hash") or ""
+        if rows and not saved_hash:
+            problems.append(f"{table}：非空快照缺少指纹")
         if saved_hash and sha16(canonical_rows(rows)) != saved_hash:
             problems.append(f"{table}：内容指纹不符（快照可能被改动或损坏）")
     return rows_src, problems
 
 
-def target_business_index(mysql: MySql, db: str, table: str, cols: list[str]) -> dict[str, tuple]:
-    """目标库里 id → 业务键 的索引（只读）。"""
-    if table not in set(mysql.tables(db)):
-        return {}
-    rows, _ = mysql.fetch_rows(db, table)
-    out = {}
-    for r in rows:
-        if r.get("id") is None:
-            continue
-        out[str(r["id"])] = tuple(str(r.get(c)) if r.get(c) is not None else "" for c in cols)
-    return out
-
-
-def target_id_set(mysql: MySql, db: str, table: str) -> set[str]:
-    if table not in set(mysql.tables(db)):
-        return set()
-    rows, _ = mysql.fetch_rows(db, table)
-    return {str(r["id"]) for r in rows if r.get("id") is not None}
-
-
-def build_id_maps(mysql: MySql, target_db: str, vault: dict, rows_src: dict) -> dict:
-    """建立「旧 id → 新 id」映射，并收集身份/关联冲突。
-
-    返回 {"maps": {表: {旧id: 新id}}, "missing_parents": {...}, "conflicts": [...], "notes": [...]}
-    """
-    maps: dict[str, dict[str, str]] = {}
-    conflicts: list[str] = []
-    notes: list[str] = []
-
-    # ---- 账号：按 username 认定「同一个人」
-    snap_user = {str(r["id"]): str(r.get("username") or "")
-                 for r in (rows_src.get("sys_user") or []) if r.get("id") is not None}
-    tgt_user = target_business_index(mysql, target_db, "sys_user", ["username"])
-    username_to_new = {}
-    for nid, biz in tgt_user.items():
-        username_to_new.setdefault(biz[0], nid)
-
-    user_map: dict[str, str] = {}
-    for oid, uname in snap_user.items():
-        if oid in tgt_user and tgt_user[oid][0] == uname:
-            user_map[oid] = oid                       # 同一个账号，id 未变
-        elif uname and uname in username_to_new:
-            user_map[oid] = username_to_new[uname]    # 同一个人，换了 id → 重映射
-            if username_to_new[uname] != oid:
-                notes.append(f"账号 {uname}：id {oid} → {username_to_new[uname]}（按用户名对应）")
-        elif oid in tgt_user:
-            conflicts.append(
-                f"账号 id={oid} 在新库里已被「{tgt_user[oid][0]}」占用，"
-                f"与快照里的「{uname}」不是同一个账号")
-        else:
-            user_map[oid] = oid                       # 新账号，保留原 id
-    maps["sys_user"] = user_map
-
-    # ---- 项目：按项目名对应（本工具不搬项目内容，只做 id 对应）
-    project_index = {str(k): str(v) for k, v in (vault.get("project_index") or {}).items()}
-    tgt_proj = target_business_index(mysql, target_db, "narrative_project", ["name"])
-    name_to_new: dict[str, str] = {}
-    for nid, biz in tgt_proj.items():
-        name_to_new.setdefault(biz[0], nid)
-
-    proj_map: dict[str, str] = {}
-    for oid, pname in project_index.items():
-        if oid in tgt_proj and tgt_proj[oid][0] == pname:
-            proj_map[oid] = oid
-        elif pname and pname in name_to_new:
-            proj_map[oid] = name_to_new[pname]
-            if name_to_new[pname] != oid:
-                notes.append(f"项目「{pname}」：id {oid} → {name_to_new[pname]}（按项目名对应）")
-        else:
-            conflicts.append(
-                f"快照里的项目「{pname}」(id={oid}) 在新库里找不到同名项目，"
-                f"它的成员/测试记录无法安全落位")
-    maps["narrative_project"] = proj_map
-
-    # ---- 会话 / 步骤：id 已被占用且业务键不一致 → 冲突
-    for table in ("playtest_session", "playtest_step"):
-        biz_cols = BUSINESS_KEYS[table]
-        snap_rows = rows_src.get(table) or []
-        tgt = target_business_index(mysql, target_db, table, biz_cols)
-        m: dict[str, str] = {}
-        for r in snap_rows:
-            if r.get("id") is None:
-                continue
-            oid = str(r["id"])
-            # 快照里同一行可能引用了「等待映射」的 project_id/tester_id，
-            # 这里先用映射前的原始值做宽松比较：若 id 不在新库 → 直接沿用。
-            if oid not in tgt:
-                m[oid] = oid
-                continue
-            # id 已被占用：只有当业务键完全一致时才认为「同一条记录」
-            if _biz_matches(table, r, tgt[oid], maps):
-                m[oid] = oid
-            else:
-                conflicts.append(f"{table} id={oid} 在新库里是另一条记录（业务键不一致）")
-        maps[table] = m
-
-    # ---- 内容表：只记录「新库里有哪些 id」用于存在性核验
-    for table in CONTENT_TABLES:
-        maps[table] = {}   # 占位；存在性用 id 集合判断（见 check_relations）
-    return {"maps": maps, "conflicts": conflicts, "notes": notes}
-
-
-def _biz_matches(table: str, snap_row: dict, target_biz: tuple, maps: dict) -> bool:
-    """比较快照行与目标行的业务键（对 id 型列先按映射换算）。"""
-    for i, col in enumerate(BUSINESS_KEYS[table]):
-        want = snap_row.get(col)
-        mapped = map_value(col, want, maps)
-        got = target_biz[i] if i < len(target_biz) else ""
-        if mapped is None:
-            return False
-        if str(mapped) != str(got):
-            return False
-    return True
-
-
-def map_value(col: str, value, maps: dict):
-    """把快照里的一个 id 值换算成目标库的 id；无法换算返回 None。"""
-    parent = FK_PARENT.get(col)
-    if not parent or value is None:
-        return value
-    m = maps.get(parent)
-    if m is None:
-        return value
-    return m.get(str(value))
-
-
-def collect_relation_problems(rows_src: dict, vault: dict, maps: dict,
-                              mysql: MySql, target_db: str,
-                              tables: list[str]) -> tuple[list[str], dict[str, set[int]]]:
-    """逐行核验外键：映射不到或父记录在新库不存在 → 记为孤立行。
-
-    返回 (问题描述列表, {表: 孤立行下标集合})，下标集合供 --on-conflict skip 使用。
-    """
-    problems: list[str] = []
-    orphan_idx: dict[str, set[int]] = {}
-    content_ids: dict[str, set[str]] = {}
-    for table in CONTENT_TABLES:
-        if table in set(mysql.tables(target_db)):
-            content_ids[table] = target_id_set(mysql, target_db, table)
-
-    for table in tables:
-        rows = rows_src.get(table) or []
-        hit: set[int] = set()
-        for idx, r in enumerate(rows):
-            for col, parent in FK_PARENT.items():
-                if col not in r or r.get(col) is None:
-                    continue
-                val = str(r.get(col))
-                if parent in WRITTEN_TABLES:
-                    ok = (maps.get(parent) or {}).get(val) is not None
-                else:
-                    ok = val in content_ids.get(parent, set())
-                if not ok:
-                    hit.add(idx)
-        if hit:
-            orphan_idx[table] = hit
-            sample = "、".join(
-                f"第 {i + 1} 行" for i in sorted(hit)[:5])
-            problems.append(f"{table}：{len(hit)} 条记录的关联在新库里不存在"
-                            f"（{sample}{' 等' if len(hit) > 5 else ''}）")
-    return problems, orphan_idx
-
-
-def restore_into(cfg: dict, mysql: MySql, target_db: str, vault: dict,
-                 source: str = "vault", from_db: str | None = None,
-                 do_backup: bool = True, mode: str = "ignore",
-                 on_conflict: str = "abort", disable_fk_checks: bool = False,
-                 allow_missing_tables: bool = False,
-                 dry_run: bool = False) -> dict:
-    out: dict = {"ok": False, "error": "", "backup": None, "stats": {},
-                 "warnings": [], "conflicts": [], "orphans": [], "notes": [],
-                 "verified": False, "dry_run": dry_run}
-
-    tables_saved = vault["tables"]
-    order = [t for t in vault.get("tables_order", TABLE_ORDER) if t in tables_saved]
-    order += [t for t in tables_saved if t not in order]
-
-    if target_db not in mysql.schemas():
-        out["error"] = (f"目标库 {target_db} 不存在；请先让新版本执行它的建库脚本，"
-                        f"再运行搬运。")
-        return out
-    if target_db not in whitelist_dbs(cfg):
-        out["error"] = (f"目标库 {target_db} 不在白名单 target_dbs 里，拒绝写入。"
-                        f"（白名单：{', '.join(whitelist_dbs(cfg))}）")
-        return out
-
-    # ---- 1) 快照完整性（问题 5）
-    if source == "live" and from_db:
-        rows_src: dict = {}
-        for table in order:
-            if table in set(mysql.tables(from_db)):
-                rows, _ = mysql.fetch_rows(from_db, table)
-                rows_src[table] = rows
-        if not any(rows_src.values()):
-            out["error"] = f"来源库 {from_db} 里没有可搬运的用户数据，已中止。"
-            return out
-    else:
-        rows_src, problems = load_snapshot_rows(vault)
-        if problems:
-            out["error"] = "保险箱快照不完整，已中止搬运：" + "；".join(problems)
-            return out
-
-    # ---- 2) 目标表是否齐全（问题 5：默认缺失即失败）
-    missing = [t for t in order if t not in set(mysql.tables(target_db))]
-    if missing and not allow_missing_tables:
-        out["error"] = ("目标库里缺少这些用户表：" + "、".join(missing)
-                        + "。默认中止（如确认要跳过，请加 --allow-missing-tables）。")
-        return out
-
-    # ---- 3) 身份 / 关联核验（问题 2）
-    built = build_id_maps(mysql, target_db, vault, rows_src)
-    maps = built["maps"]
-    out["conflicts"] = list(built["conflicts"])
-    out["notes"] = list(built["notes"])
-
-    active_tables = [t for t in order if t not in missing]
-    orphan_problems, orphan_idx = collect_relation_problems(
-        rows_src, vault, maps, mysql, target_db, active_tables)
-    out["orphans"] = orphan_problems
-
-    blocking = bool(out["conflicts"] or out["orphans"])
-    if blocking and on_conflict == "abort":
-        detail = out["conflicts"] + out["orphans"]
-        out["error"] = ("发现身份/关联冲突，已中止（未写入任何数据）：\n   - "
-                        + "\n   - ".join(detail)
-                        + "\n   如确认可以跳过这些记录，请用 --on-conflict skip 重试。")
-        return out
-
-    skip_conflict_users: set[str] = set()
-    if out["conflicts"] and on_conflict == "skip":
-        for msg in out["conflicts"]:
-            m = re.search(r"id=(\d+)", msg)
-            if m:
-                skip_conflict_users.add(m.group(1))
-    if blocking and on_conflict == "skip":
-        out["warnings"].append(
-            f"按 --on-conflict skip：跳过 {len(out['conflicts'])} 处身份冲突、"
-            f"{sum(len(v) for v in orphan_idx.values())} 条孤立记录")
-
-    # ---- 4) 备份
-    backup_path = None
-    if do_backup and not dry_run:
-        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_path = BACKUP_DIR / f"{target_db}_搬运前_{stamp}.sql"
-        mysql.dump_db(target_db, backup_path)
-    out["backup"] = str(backup_path) if backup_path else None
-
-    # ---- 5) 生成 SQL
-    sql_parts: list[str] = ["SET NAMES utf8mb4;", "START TRANSACTION;"]
-    if disable_fk_checks:
-        sql_parts.insert(1, "SET FOREIGN_KEY_CHECKS=0;")
-        out["warnings"].append("已按参数关闭外键检查（不推荐）：孤立引用可能被写入")
-    stats: dict[str, dict] = {}
-    warnings = out["warnings"]
-
-    for table in order:
-        rows = rows_src.get(table) or []
-        if not rows or table in missing:
-            stats[table] = {"planned": 0, "before": None, "after": None,
-                            "skipped": table in missing}
-            continue
-        cols_now = mysql.columns(target_db, table)
-        saved_cols = tables_saved.get(table, {}).get("columns", {})
-        base64_cols = set(tables_saved.get(table, {}).get("base64_columns", []))
-        usable = [c for c in saved_cols.keys() if c in cols_now]
-        extra_cols = []
-        for name, info in cols_now.items():
-            if name in saved_cols:
-                continue
-            placeholder = fill_value_for(info)
-            if placeholder is not None:
-                usable.append(name)
-                extra_cols.append((name, placeholder))
-        if extra_cols:
-            warnings.append(f"{table}: 新版本新增了必填列 "
-                            + ", ".join(f"{n}（填 {v}）" for n, v in extra_cols))
-
-        before = mysql.count(target_db, table)
-        verb = "INSERT IGNORE" if mode == "ignore" else "REPLACE"
-        if mode == "replace":
-            warnings.append("按 --mode replace：同 id 的旧行会被覆盖，请谨慎核对")
-
-        values_lines = []
-        skipped_rows = 0
-        extra_names = extra_cols_names(extra_cols)
-        for idx, row in enumerate(rows):
-            # 跳过冲突账号 / 孤立行（on_conflict=skip 时）
-            if table == "sys_user" and skip_conflict_users and str(row.get("id")) in skip_conflict_users:
-                skipped_rows += 1
-                continue
-            if on_conflict == "skip" and idx in orphan_idx.get(table, set()):
-                skipped_rows += 1
-                continue
-            vals = []
-            for c in usable:
-                if c in extra_names:
-                    continue
-                v = row.get(c)
-                if c in FK_PARENT:
-                    mapped = map_value(c, v, maps)
-                    if mapped is None:
-                        mapped = v     # 父表不参与映射（如内容表）时按原值写
-                    v = mapped
-                vals.append(sql_literal(v, c in base64_cols))
-            for name, placeholder in extra_cols:
-                vals.append(placeholder)
-            values_lines.append("(" + ",".join(vals) + ")")
-
-        if not values_lines:
-            stats[table] = {"planned": 0, "before": before, "after": before,
-                            "skipped_rows": skipped_rows}
-            continue
-        col_sql = ",".join(f"`{c}`" for c in usable)
-        for i in range(0, len(values_lines), 200):
-            chunk = values_lines[i:i + 200]
-            sql_parts.append(
-                f"{verb} INTO `{table}` ({col_sql}) VALUES\n" + ",\n".join(chunk) + ";")
-        stats[table] = {"planned": len(values_lines), "before": before, "after": None,
-                        "skipped_rows": skipped_rows}
-
-    sql_parts.append("COMMIT;")
-    if disable_fk_checks:
-        sql_parts.append("SET FOREIGN_KEY_CHECKS=1;")
-    sql_text = "\n".join(sql_parts) + "\n"
-    out["stats"] = stats
-    out["sql"] = sql_text
-
-    if dry_run:
-        out["ok"] = True
-        out["verified"] = True
-        out["warnings"].append("--dry-run：只核验未写入")
-        return out
-
-    # ---- 6) 执行
-    log_file = LOG_DIR / f"restore_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-    log(f"开始搬运：{source} → {target_db}", log_file)
-    if backup_path:
-        log(f"搬运前备份：{backup_path}", log_file)
-    for w in warnings:
-        log(f"警告：{w}", log_file)
-    out["log"] = str(log_file)
-
-    try:
-        mysql.sql(sql_text, db=target_db)
-    except RuntimeError as exc:
-        log(f"搬运失败：{exc}", log_file)
-        sql_err = LOG_DIR / "last_restore_error.sql"
-        sql_err.write_text(sql_text, encoding="utf-8")
-        out["error"] = str(exc)
-        out["sql_dump"] = str(sql_err)
-        return out
-
-    # ---- 7) 写后核验（问题 5）
-    mismatch = []
-    for table, st in stats.items():
-        if st.get("skipped") or st["planned"] == 0:
-            continue
-        st["after"] = mysql.count(target_db, table)
-        delta = (st["after"] - st["before"]) if st["before"] is not None else 0
-        st["inserted"] = delta
-        if delta < 0:
-            mismatch.append(f"{table} 行数反而减少了（{st['before']} → {st['after']}）")
-        elif delta == 0:
-            mismatch.append(f"{table} 计划 {st['planned']} 行但一行都没写进去"
-                            f"（可能已存在或键冲突）")
-    out["mismatch"] = mismatch
-    out["verified"] = not mismatch
-    if mismatch:
-        out["ok"] = False
-        out["error"] = "搬运执行完成，但写后核验未通过：" + "；".join(mismatch)
-        log(f"写后核验未通过：{mismatch}", log_file)
-        return out
-
-    log("搬运完成并通过核验", log_file)
-    for table, st in stats.items():
-        if st["planned"]:
-            log(f"  {table:<20} 计划 {st['planned']:>5} 行  "
-                f"{st['before']} → {st['after']}", log_file)
-    out["ok"] = True
-    return out
-
-
-def extra_cols_names(extra_cols: list[tuple[str, str]]) -> set[str]:
-    return {n for n, _ in extra_cols}
+def restore_into(cfg, mysql, target_db, vault, **kwargs):
+    from safe_recovery import restore
+    return restore(sys.modules[__name__], cfg, mysql, target_db, vault, **kwargs)
 
 
 def load_vault() -> dict | None:
@@ -1179,7 +731,7 @@ def cmd_restore(cfg: dict, mysql: MySql, args) -> int:
             print(f"  出错 SQL 已保存：{result['sql_dump']}")
         return 1
 
-    print(f"\n✓ 搬运完成{'（dry-run，未写库）' if result.get('dry_run') else ''}，写后核验通过")
+    print("\n✓ 预检通过，未写库" if result.get("dry_run") else "\n✓ 恢复核验通过")
     if result["backup"]:
         print(f"  搬运前备份：{result['backup']}")
     for table, st in result.get("stats", {}).items():
@@ -1214,7 +766,9 @@ def cmd_watch(cfg: dict, mysql: MySql, args) -> int:
         return 1
     interval = args.interval or cfg["watch_interval_seconds"]
     dbs = whitelist_dbs(cfg, args.db)
-    auto = bool(args.auto_restore or cfg.get("auto_restore"))
+    auto = False
+    if args.auto_restore or cfg.get("auto_restore"):
+        print("Auto-restore disabled: stop writers and run manual restore after review.")
     log_file = today_log()
     log(f"开始监控（每 {interval} 秒检查一次）；保险箱建立于 {vault['created_at']}；"
         f"白名单：{', '.join(dbs)}；模式：{'自动搬运' if auto else '只报警（不写入）'}；"
@@ -1251,7 +805,7 @@ def cmd_watch(cfg: dict, mysql: MySql, args) -> int:
                     log(f"✅ 已自动把用户数据搬回 {db}；搬运前备份：{res['backup']}", log_file)
                     last_level[db] = "RESTORED"
                 else:
-                    log(f"✗ 自动搬运未执行成功（未写入脏数据）：{res['error']}", log_file)
+                    log(f"✗ 恢复未成功，请核查结果与备份：{res['error']}", log_file)
         if args.once:
             break
         time.sleep(interval)

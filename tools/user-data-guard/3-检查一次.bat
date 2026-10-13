@@ -6,12 +6,12 @@ python -c "import sys" >nul 2>nul && set "PY=python"
 if not defined PY (
   py -3 -c "import sys" >nul 2>nul && set "PY=py -3"
 )
-if not defined PY if exist "%LOCALAPPDATA%\Programs\Python\Python313\python.exe" set "PY=%LOCALAPPDATA%\Programs\Python\Python313\python.exe"
-if not defined PY if exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" set "PY=%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
-if not defined PY if exist "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" set "PY=%LOCALAPPDATA%\Programs\Python\Python311\python.exe"
-if not defined PY if exist "C:\Python313\python.exe" set "PY=C:\Python313\python.exe"
-if not defined PY if exist "C:\Python312\python.exe" set "PY=C:\Python312\python.exe"
-if not defined PY if exist "C:\Python311\python.exe" set "PY=C:\Python311\python.exe"
+if not defined PY if exist "%LOCALAPPDATA%\Programs\Python\Python313\python.exe" set PY="%LOCALAPPDATA%\Programs\Python\Python313\python.exe"
+if not defined PY if exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" set PY="%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
+if not defined PY if exist "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" set PY="%LOCALAPPDATA%\Programs\Python\Python311\python.exe"
+if not defined PY if exist "C:\Python313\python.exe" set PY="C:\Python313\python.exe"
+if not defined PY if exist "C:\Python312\python.exe" set PY="C:\Python312\python.exe"
+if not defined PY if exist "C:\Python311\python.exe" set PY="C:\Python311\python.exe"
 if not defined PY (
   echo.
   echo  [guard] Python not found.
@@ -22,5 +22,10 @@ if not defined PY (
   exit /b 1
 )
 %PY% guard.py check
+if errorlevel 1 (
+  echo [guard] FAILED. Review the error above; do not assume success.
+  pause
+  exit /b 1
+)
 echo.
 pause

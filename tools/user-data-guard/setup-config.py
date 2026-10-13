@@ -18,6 +18,7 @@ guard.config.local.json 是「你本机的真实配置」（含数据库密码�
 from __future__ import annotations
 
 import json
+import getpass
 import sys
 from pathlib import Path
 
@@ -81,7 +82,7 @@ def main() -> int:
     port = ask("2/6 MySQL 端口", str(cfg.get("port") or 3306))
     cfg["port"] = int(port) if port.isdigit() else 3306
     cfg["user"] = ask("3/6 MySQL 用户名", str(cfg.get("user") or "root"))
-    cfg["password"] = ask("4/6 MySQL 密码", str(cfg.get("password") or ""))
+    cfg["password"] = getpass.getpass("4/6 MySQL 密码（不回显，回车保留已有值）: ") or cfg.get("password", "")
     target = ask("5/6 要保护的数据库名", str(cfg.get("target_db") or "narrative_studio"))
     cfg["target_db"] = target
     # 白名单：默认只保护这一个库（安全默认，不自动扫描其他库）
