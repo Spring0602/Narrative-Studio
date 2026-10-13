@@ -1,0 +1,6 @@
+# 本工具的本地产物与凭据：一律不要提交
+guard.config.local.json
+vault/
+logs/
+*.sql
+__pycache__/
