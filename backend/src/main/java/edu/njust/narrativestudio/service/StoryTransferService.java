@@ -18,6 +18,7 @@ public class StoryTransferService {
     }
 
     @Transactional(readOnly=true,isolation=org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
+    // 【解释】读取项目、图和规则，把数据库 ID 转为 nodeKey/variableKey，生成可迁移文档，不导出账号凭据或模拟历史。
     public Document exportStory(Long user, Long project) {
         var p=projects.getAccessible(user,project);
         var g=graph.getGraph(user,project);
@@ -46,6 +47,11 @@ public class StoryTransferService {
     // Import is atomic and always creates a new owned project; exported IDs are never trusted.
     @Transactional
     public ProjectDtos.Summary importStory(Long user, Document document) {
+        // 【Excel 链路的最终落库入口】通用方法也支持其他剧情导入，修改这里会影响不止 Excel。
+        // 先校验文档和标识唯一性，再创建项目、节点和变量，最后创建引用它们的选项与规则。
+        // nodeIds/variableIds 将稳定业务编号映射为新数据库 ID，不接受外部文件指定数据库主键。
+        // Excel 当前生成的变量/条件/效果为空；不要因为此方法能导入规则就声称 Excel 能理解自然语言规则。
+        // 【联动修改】扩大 Excel 节点/连线上限后仍需通过 Document 的 @Size 等约束，不能直接跳过 validate。
         validate(document);
         Set<String> nodeKeys=new HashSet<>(), variableKeys=new HashSet<>();
         for(var n:document.nodes()) unique(nodeKeys,n.nodeKey());
@@ -66,15 +72,18 @@ public class StoryTransferService {
         }
         return p;
     }
+    // 【解释】检查 DTO 约束和 schemaVersion；旧版本文档不能携带跨局变量/高级规则。
     private void validate(Document document) {
         if(document==null || !validator.validate(document).isEmpty()) throw FeatureScope.invalid("剧情文件格式或容量不符合 schemaVersion=1/2");
         if(document.schemaVersion()==1 && (document.variables().stream().anyMatch(v->!"SESSION".equals(v.persistenceScope()))
                 || document.choices().stream().anyMatch(c->c.unlockRule()!=null)))
             throw FeatureScope.invalid("跨局变量和高级解锁规则需要 schemaVersion=2");
     }
+    // 【解释】不区分大小写检查重复业务标识。
     private static void unique(Set<String> keys,String key) {
         if(!keys.add(key.toLowerCase(Locale.ROOT))) throw FeatureScope.invalid("剧情文件包含重复标识: "+key);
     }
+    // 【解释】查编号映射，缺失引用就拒绝导入/导出，不生成悬空连线。
     private static <K,V> V required(Map<K,V> map,K key) {
         V value=map.get(key);
         if(value==null) throw FeatureScope.invalid("剧情文件包含无效引用");

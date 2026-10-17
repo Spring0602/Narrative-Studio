@@ -9,6 +9,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/projects/{projectId}/issues")
+// 【MVC 入口】list/get 读取检测结果；status 修改处理状态。发起结构检测的接口在 ReleaseController.analysis-runs，不在这里。
+// 【修改提示】路由、参数名变化需同步前端 API 和测试；业务权限/关联校验在 Service 保留，不在这里绕过。
+// 【常见修改】默认每页 10：此类 size 的 defaultValue="20" 改为 "10"；前端显式传 size 时还需改前端，上限由 Service/FeatureScope 控制。
 public class IssueController {
     private final IssueService service;private final CurrentUser user;
     public IssueController(IssueService service,CurrentUser user) {this.service=service;this.user=user;}

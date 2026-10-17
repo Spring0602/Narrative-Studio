@@ -3,6 +3,10 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import java.util.List;
 
+// 【规则格式】VariableRequest 定义变量；ConditionInput/EffectInput 定义判断和变化；RulesRequest 是整组选项规则替换。
+// 默认 persistenceScope 为 SESSION，PROFILE 才跨局；新增类型/操作符还需改引擎与前端，不能只扩大正则。
+// 【常见修改】每组选项最多 50 条普通条件：conditions 的 @Size(max=100) 改为 50；effects 上限独立，通用导入也要检查。
+// conditionGroup 是 AND/OR 分组编号，不是排序值，改变分组会改变能否选择。
 public final class RuleDtos {
     private RuleDtos() {}
     public record VariableRequest(

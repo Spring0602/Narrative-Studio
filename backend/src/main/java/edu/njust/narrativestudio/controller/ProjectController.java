@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/projects")
+// 【MVC 入口】create 建项目；list 列我的项目；get 查详情；update 改基本信息；archive 虽用 DELETE 路由，实际是归档而非物理删除。
+// 【修改提示】路由、参数名变化需同步前端 API 和测试；业务权限/关联校验在 Service 保留，不在这里绕过。
 public class ProjectController {
     private final ProjectService projectService;
     private final CurrentUser currentUser;

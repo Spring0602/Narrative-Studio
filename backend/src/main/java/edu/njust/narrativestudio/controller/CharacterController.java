@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/projects/{projectId}/characters")
+// 【MVC 入口】list/get 读角色；create/update 共用 SaveRequest；delete 调用逻辑删除及引用保护，不删除全部关联。
+// 【修改提示】路由、参数名变化需同步前端 API 和测试；业务权限/关联校验在 Service 保留，不在这里绕过。
 public class CharacterController {
     private final CharacterService characterService;
     private final CurrentUser currentUser;

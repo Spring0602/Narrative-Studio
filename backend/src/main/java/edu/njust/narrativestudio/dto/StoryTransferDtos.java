@@ -6,6 +6,9 @@ import java.util.List;
 import edu.njust.narrativestudio.dto.StoryGraphDtos.NodeRequest;
 import edu.njust.narrativestudio.dto.RuleDtos.VariableRequest;
 
+// 【可迁移文档】Document 描述节点、变量、连线；关系用稳定标识，不依赖原数据库 ID；被 JSON 和 Excel 导入复用。
+// 【修改提示】nodes 的 500、choices 的 1000 与图服务/Excel/发布/检测限制联动；扩大一个注解不会自动扩大全部入口。
+// 改变 schemaVersion 需要兼容已有文件，不能只改数字；export/import 需做往返测试。
 public final class StoryTransferDtos {
     private StoryTransferDtos() {}
     public record Document(

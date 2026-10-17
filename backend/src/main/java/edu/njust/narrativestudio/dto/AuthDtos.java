@@ -4,6 +4,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+// 【请求/响应】RegisterRequest 注册，LoginRequest 登录，AuthResponse 返回令牌和基本资料；@Valid 在 Controller 触发。
+// 【常见修改】昵称最多 30：displayName 的 @Size(max=40) 改为 30；用户名最短 6 位需把正则 {4,32} 和对应提示一起改。
+// 密码最短长度需同步 AccountDtos 的重置/改密新密码规则；旧密码验证不是注册校验。
 public final class AuthDtos {
     private AuthDtos() {}
 

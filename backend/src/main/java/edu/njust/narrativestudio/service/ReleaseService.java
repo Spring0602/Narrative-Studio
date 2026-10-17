@@ -27,14 +27,19 @@ public class ReleaseService {
         this.knowledge=knowledge;this.cast=cast;this.catalog=catalog;this.engine=engine;this.access=access;this.guard=guard;this.json=json;
         this.unlock=unlock;
     }
+    // 【解释】按版本号倒序分页展示发布记录；分页校验共用 FeatureScope.limit。
     public PlaytestService.Page<Summary> list(Long u,Long p,int page,int size) {
         access.requireMember(u,p);String limit=FeatureScope.limit(page,size);
         var q=new LambdaQueryWrapper<StoryRelease>().eq(StoryRelease::getProjectId,p);
         long total=releases.selectCount(q);
         return new PlaytestService.Page<>(releases.selectList(q.orderByDesc(StoryRelease::getVersionNo).last(limit)).stream().map(this::summary).toList(),page,size,total,(total+size-1)/size);
     }
+    // 【解释】成员读取指定发布快照。
     public ReleaseSnapshot get(Long u,Long p,Long id) { access.requireMember(u,p);return snapshot(p,id); }
     @Transactional(isolation=Isolation.READ_COMMITTED)
+    // 【解释】OWNER 在项目锁内校验起点、连接、变量、规则及角色知识引用，采集快照并递增版本号。
+    // 【常见修改】节点上限 500 需同步图创建/导入/检测等入口；只改错误提示不会放开限制。
+    // 发布是冻结快照，不是手动历史保存，不能把两类记录的保留数量混用。
     public Summary publish(Long u,Long p) {
         guard.editor(u,p);access.requireOwner(u,p);
         var ns=nodes.selectList(new LambdaQueryWrapper<StoryNode>().eq(StoryNode::getProjectId,p).orderByAsc(StoryNode::getId));
@@ -75,6 +80,7 @@ public class ReleaseService {
         catch(Exception ex) { throw BusinessException.conflict("发布快照序列化失败"); }
         releases.insert(r);return summary(r);
     }
+    // 【解释】按项目和版本读取 JSON 快照，校验格式版本后反序列化；内部调用需由外层保证用户权限。
     public ReleaseSnapshot snapshot(Long p,Long id) {
         StoryRelease r=releases.selectById(id);
         if(r==null || !p.equals(r.getProjectId())) throw BusinessException.notFound("发布版本不存在");
@@ -83,6 +89,7 @@ public class ReleaseService {
         catch(Exception ex) { throw BusinessException.conflict("发布快照损坏"); }
     }
     /** Published IDs must survive because the existing step schema uses foreign keys to authoring rows. */
+    // 【解释】扫描发布快照，阻止物理删除仍被历史版本引用的节点/选项，避免旧模拟外键失效。
     public void requireUnpublished(Long p,Long id,boolean node) {
         for(var r:releases.selectList(new LambdaQueryWrapper<StoryRelease>().eq(StoryRelease::getProjectId,p))) {
             ReleaseSnapshot s=snapshot(p,r.getId());
@@ -90,5 +97,6 @@ public class ReleaseService {
             if(used) throw BusinessException.conflict("对象已被发布版本引用，不能物理删除；可编辑或停用");
         }
     }
+    // 【解释】发布记录转概要；新增字段需同步 record、前端与构造调用。
     private Summary summary(StoryRelease r) { return new Summary(r.getId(),r.getProjectId(),r.getVersionNo(),r.getPublishedBy(),r.getPublishedAt(),r.getSchemaVersion()); }
 }

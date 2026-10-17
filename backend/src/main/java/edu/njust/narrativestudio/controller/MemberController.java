@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/projects/{projectId}/members")
+// 【MVC 入口】list 查询成员；add 邀请已有用户；updateRole 改普通成员角色；remove 移除成员。写权限由 MemberServiceImpl 限定 OWNER。
+// 【修改提示】路由、参数名变化需同步前端 API 和测试；业务权限/关联校验在 Service 保留，不在这里绕过。
 public class MemberController {
     private final MemberService memberService;
     private final CurrentUser currentUser;

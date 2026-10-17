@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.LocalDateTime;
 
 @TableName("playtest_step")
+// 【持久化模型】对应 playtest_step 表；单步执行前后的变量、知识、跨局进度快照；stepNo 从 0 开始。
+// 【修改提示】getter/setter 只读写 Java 对象，新增持久化字段需同步 SQL、DTO/Service 和相关快照/测试；仅展示计算值优先放响应 DTO。
 public class PlaytestStep {
     private String progressBefore,progressAfter;
     public String getProgressBefore() {return progressBefore;}

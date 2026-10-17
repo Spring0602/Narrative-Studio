@@ -9,6 +9,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/projects/{projectId}/choice-drafts")
+// 【MVC 入口】list/get 查草稿；create/update 以 null/已有 id 复用 save；delete 删除；promote 补目标转正式选项，路由 publish 不等于发布整个项目。
+// 【修改提示】路由、参数名变化需同步前端 API 和测试；业务权限/关联校验在 Service 保留，不在这里绕过。
+// 【常见修改】默认每页 10：此类 size 的 defaultValue="20" 改为 "10"；前端显式传 size 时还需改前端，上限由 Service/FeatureScope 控制。
 public class ChoiceDraftController {
     private final ChoiceDraftService service;private final CurrentUser user;
     public ChoiceDraftController(ChoiceDraftService service,CurrentUser user) {this.service=service;this.user=user;}

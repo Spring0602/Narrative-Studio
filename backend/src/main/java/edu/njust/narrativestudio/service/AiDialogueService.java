@@ -20,6 +20,9 @@ public class AiDialogueService {
         this.access=access;this.scope=scope;this.provider=provider;this.json=json;
     }
     // No transaction is held while waiting on a model. Only explicitly selected content is sent.
+    // 【解释】验证编辑权限和明确同意，只发送选中节点/角色的资料；生成后再次校验权限，返回未保存候选。
+    // 【修改提示】候选不是已写入剧情；不能把 saved=false 改 true 来冒充保存。默认未启用 AI，配置代码不等于实际已接通。
+    // 方向文字长度看本类 Request 的 @Size(max=1000)；不得打印完整用户资料或密钥到日志。
     public Candidate generate(Long user,Long project,Request request) {
         access.requireEditor(user,project);
         if(!Boolean.TRUE.equals(request.consent())) throw FeatureScope.invalid("请先确认允许向配置的 AI 服务发送所选剧情与角色资料");

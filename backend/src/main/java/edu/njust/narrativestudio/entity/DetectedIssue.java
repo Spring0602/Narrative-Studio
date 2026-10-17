@@ -2,6 +2,8 @@ package edu.njust.narrativestudio.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 @TableName("detected_issue")
+// 【持久化模型】对应 detected_issue 表；自动检测结果与处理状态；severity 是严重程度，status 是处理进度。
+// 【修改提示】getter/setter 只读写 Java 对象，新增持久化字段需同步 SQL、DTO/Service 和相关快照/测试；仅展示计算值优先放响应 DTO。
 public class DetectedIssue {
     @TableId(type=IdType.AUTO)
     private Long id;

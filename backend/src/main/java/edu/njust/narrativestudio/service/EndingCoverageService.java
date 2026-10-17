@@ -21,6 +21,9 @@ public class EndingCoverageService {
         this.access=access;this.releases=releases;this.nodes=nodes;this.counts=counts;
     }
     @Transactional(readOnly=true,isolation=org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
+    // 【解释】按当前用户、项目和选定版本聚合会话；只把 COMPLETED 的当前结局算作达成。
+    // 覆盖率=达成过的不同结局数/该版本总结束节点数，不是成功会话数/总会话数；无结局时返回 0。
+    // 【常见修改】保留一位小数：Math.round(covered*1000.0/endings.size())/10.0，保留零分母分支并同步前端显示/测试。
     public Coverage get(Long user,Long project,Long release) {
         access.requireMember(user,project);
         var definitions=release==null

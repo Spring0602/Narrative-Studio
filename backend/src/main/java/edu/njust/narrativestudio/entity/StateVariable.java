@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.LocalDateTime;
 
 @TableName("state_variable")
+// 【持久化模型】对应 state_variable 表；变量定义和初始值，persistenceScope 区分 SESSION/PROFILE，不存每一步动态值。
+// 【修改提示】getter/setter 只读写 Java 对象，新增持久化字段需同步 SQL、DTO/Service 和相关快照/测试；仅展示计算值优先放响应 DTO。
 public class StateVariable {
     private String persistenceScope = "SESSION";
     public String getPersistenceScope() {return persistenceScope==null?"SESSION":persistenceScope;}

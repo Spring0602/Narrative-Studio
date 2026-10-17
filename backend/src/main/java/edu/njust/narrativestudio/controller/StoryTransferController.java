@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/projects")
+// 【MVC 入口】exportStory 导出统一剧情 JSON 文档；importStory 创建新项目，不覆盖现有项目；与 Excel 共用底层导入逻辑。
+// 【修改提示】路由、参数名变化需同步前端 API 和测试；业务权限/关联校验在 Service 保留，不在这里绕过。
 public class StoryTransferController {
     private final StoryTransferService service;
     private final CurrentUser currentUser;

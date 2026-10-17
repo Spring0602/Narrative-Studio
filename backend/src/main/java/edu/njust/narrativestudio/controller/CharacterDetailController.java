@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 @RestController
 @RequestMapping("/api/projects/{projectId}")
+// 【MVC 入口】relations/relation 查关系，createRelation/updateRelation 复用 saveRelation，deleteRelation 删除关系；知识接口同理；replaceCast 整体替换节点出场角色。
+// 【修改提示】路由、参数名变化需同步前端 API 和测试；业务权限/关联校验在 Service 保留，不在这里绕过。
 public class CharacterDetailController {
     private final CharacterDetailService service;private final CurrentUser user;
     public CharacterDetailController(CharacterDetailService service,CurrentUser user) {this.service=service;this.user=user;}

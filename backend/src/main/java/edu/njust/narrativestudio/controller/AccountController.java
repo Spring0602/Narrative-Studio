@@ -8,6 +8,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api")
+// 【MVC 入口】profile 查资料；requestEmail/confirm 绑定邮箱；requestReset/reset 重置密码；password 改密；users/status 管理员管理用户。accepted 统一公共响应防账户枚举。
+// 【修改提示】路由、参数名变化需同步前端 API 和测试；业务权限/关联校验在 Service 保留，不在这里绕过。
+// 【常见修改】默认每页 10：此类 size 的 defaultValue="20" 改为 "10"；前端显式传 size 时还需改前端，上限由 Service/FeatureScope 控制。
 public class AccountController {
     private final AccountService service;private final CurrentUser user;
     public AccountController(AccountService service,CurrentUser user) {this.service=service;this.user=user;}

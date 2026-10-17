@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 /** Fail closed instead of deploying with the development JWT/database defaults. */
 @Component
 @Profile("prod")
+// 【生产检查】仅 prod 生效，构造时验证 JWT 密钥长度、数据库凭据和 CORS；required 拒绝未配置项。
+// 【修改提示】通过环境配置提供实际值，不把密钥写进源码/注释/提交记录，也不删检查让开发默认密码进入生产。
 public class ProductionConfigurationCheck {
     public ProductionConfigurationCheck(Environment env) {
         String secret=required(env,"JWT_SECRET");

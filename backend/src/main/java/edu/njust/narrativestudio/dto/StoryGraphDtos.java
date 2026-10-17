@@ -12,6 +12,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+// 【图数据】NodeRequest/ChoiceRequest 编辑节点选项，Summary 用于显示；Graph 将两类列表一起返回。
+// 【常见修改】节点标题最多 80：NodeRequest.title 的 @Size(max=120) 改为 80；Excel 解析提示、导入测试和前端一并核对。
+// BatchNodesRequest 最多 200 是本次批量限制；BatchPositionsRequest 最多 500 是一次坐标更新量，都不等于项目总节点上限。
+// 增加排序最小值可给 ChoiceRequest.sortOrder 加 @jakarta.validation.constraints.Min(0)，null 默认值仍由 Service 决定。
 public final class StoryGraphDtos {
     private StoryGraphDtos() {}
 

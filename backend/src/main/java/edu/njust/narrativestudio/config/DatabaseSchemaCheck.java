@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 /** Read-only fail-fast check; initialization and migration remain explicit Navicat operations. */
 @Component
 @ConditionalOnProperty(name="app.database.schema-check",havingValue="true",matchIfMissing=true)
+// 【启动检查】run 对关键表列执行 WHERE 1=0 的只读查询，缺字段或无权限就启动失败；不自动执行 DDL。
+// 【修改提示】新增持久化字段时可加入列清单，但还需增量 SQL、测试结构和交接文档；不要关闭检查掩盖数据库没升级。
 public class DatabaseSchemaCheck implements ApplicationRunner {
     private final JdbcTemplate db;
     public DatabaseSchemaCheck(JdbcTemplate db) {this.db=db;}

@@ -21,6 +21,7 @@ public class ProjectAccessService {
         this.memberMapper = memberMapper;
     }
 
+    // 【解释】项目存在且用户有成员记录即可读取。
     public ProjectMember requireMember(Long userId, Long projectId) {
         requireProject(projectId);
         ProjectMember member = findMember(userId, projectId);
@@ -28,6 +29,7 @@ public class ProjectAccessService {
         return member;
     }
 
+    // 【解释】要求 OWNER/EDITOR 且项目未归档；被多个模块共用。
     public ProjectMember requireEditor(Long userId, Long projectId) {
         NarrativeProject project = requireProject(projectId);
         ProjectMember member = findMember(userId, projectId);
@@ -40,6 +42,8 @@ public class ProjectAccessService {
         return member;
     }
 
+    // 【解释】先执行编辑检查，再限定 OWNER。
+    // 【修改提示】提示文字可泛化为“只有项目所有者可以执行此操作”；该方法不只管理成员，也用于发布等入口。
     public ProjectMember requireOwner(Long userId, Long projectId) {
         ProjectMember member = requireEditor(userId, projectId);
         if (!"OWNER".equals(member.getMemberRole())) {
@@ -48,6 +52,7 @@ public class ProjectAccessService {
         return member;
     }
 
+    // 【解释】拒绝不存在/已删除的项目，归档项目仍可供只读业务查询。
     public NarrativeProject requireProject(Long projectId) {
         NarrativeProject project = projectMapper.selectById(projectId);
         if (project == null || "DELETED".equals(project.getStatus())) {
@@ -56,6 +61,7 @@ public class ProjectAccessService {
         return project;
     }
 
+    // 【解释】按用户与项目组合查成员，不通过全局用户角色推断项目角色。
     private ProjectMember findMember(Long userId, Long projectId) {
         return memberMapper.selectOne(new LambdaQueryWrapper<ProjectMember>()
                 .eq(ProjectMember::getProjectId, projectId)

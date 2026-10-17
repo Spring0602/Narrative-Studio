@@ -26,6 +26,9 @@ public class OllamaDialogueProvider implements DialogueProvider {
         this.enabled=enabled;this.endpoint=endpoint;this.model=model;this.json=json;
     }
     @Override
+    // 【解释】未启用或未配模型就返回不可用；校验服务地址、限制并发，超时请求模型并限制响应大小，finally 归还并发槽。
+    // 【常见修改】请求超时 Duration.ofSeconds(30) 可调整，但需同步前端超时并验证失败行为；连接超时 5 秒是另一项。
+    // 模型地址来自配置，不接受用户任意 URL；不能删 URL/响应大小保护来排错。
     public String generate(String context) {
         if(!enabled || model.isBlank()) throw unavailable();
         URI uri;
@@ -55,11 +58,15 @@ public class OllamaDialogueProvider implements DialogueProvider {
         } catch(java.io.IOException ex) {throw unavailable();}
         finally {slots.release();}
     }
+    // 【解释】统一 AI 不可用提示，核心编辑/试玩不依赖 AI。
     private static BusinessException unavailable() {
         return new BusinessException("AI_UNAVAILABLE","AI 未启用、未配置或暂时不可用；核心编辑和试玩功能不受影响",HttpStatus.SERVICE_UNAVAILABLE);
     }
     /** Cancel oversized responses before buffering them; request timeout also bounds generation. */
     private static final class LimitedBody implements HttpResponse.BodySubscriber<byte[]> {
+        // 【解释】getBody 获取最终响应；onSubscribe 保存订阅；onNext 累计字节并在超限时取消；
+        // onError/onComplete 转交错误/完成信号。65536 是响应字节上限，外层 6000 是候选文本字符上限。
+        // 【修改提示】扩大生成长度须同时评估 num_predict、超时、响应字节与文本上限，而不是只改一个数字。
         private final HttpResponse.BodySubscriber<byte[]> delegate=HttpResponse.BodySubscribers.ofByteArray();
         private Flow.Subscription subscription;
         private int bytes;

@@ -7,6 +7,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 /** Single-instance safety net. Uses the actual peer address; never trusts arbitrary forwarding headers. */
 @Component
+// 【限流链路】shouldNotFilter 选出账户敏感接口；doFilterInternal 超限返回 429；allow 用同步方法维护单机每 IP 时间窗口。
+// 【常见修改】每分钟 10 次：allow 中 w.count()>=20 改为 >=10，测试第 10 次成功、第 11 次拒绝。
+// 若改时间窗 60 秒，要同步纳秒常量和 Retry-After；这不是跨多实例的共享限流，不信任随意传入的转发 IP 头。
 public class AccountRequestLimit extends OncePerRequestFilter {
     private record Window(long start,int count) {}
     private final Map<String,Window> windows=new HashMap<>();

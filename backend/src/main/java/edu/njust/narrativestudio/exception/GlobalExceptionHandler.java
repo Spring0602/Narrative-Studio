@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
+// 【统一异常链路】上传过大->413，缺参数/格式/校验->400，数据库约束冲突->409，业务异常用自身状态，未知异常->500。
+// handleValidation 取字段错误说明；handleUnexpected 不把 SQL/堆栈/密码返回前端。
+// 【常见修改】Excel 上限变化时同步 handleUploadSize 的“5MB”提示、解析器和 application.yml；不能统一返回 200 隐藏错误。
 public class GlobalExceptionHandler {
     @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
     public ResponseEntity<ApiResponse<Void>> handleUploadSize(Exception ex) {

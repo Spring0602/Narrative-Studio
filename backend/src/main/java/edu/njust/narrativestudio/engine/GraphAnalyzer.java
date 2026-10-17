@@ -6,6 +6,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class GraphAnalyzer {
     public record Finding(String type,String severity,String targetType,Long targetId,String message) {}
+    // 【解释】仅按启用连线做结构检测，报告坏引用、起点数量、孤立、不可达、死路、结局出边和循环。
+    // 它不求解变量条件，结构可达不代表实际可达；循环可能是合法剧情，因此当前为 WARNING。
+    // 【常见修改】循环提示可改 CYCLE 的 message；若改严重级别，同步前端/测试，并注意 IssueService 旧记录不会自动刷新文案。
     public List<Finding> analyze(List<StoryNode> nodes,List<StoryChoice> choices) {
         Map<Long,Set<Long>> edges=new LinkedHashMap<>();Set<Long> incoming=new HashSet<>();
         nodes.forEach(n->edges.put(n.getId(),new LinkedHashSet<>()));
@@ -30,6 +33,7 @@ public class GraphAnalyzer {
         }
         return result;
     }
+    // 【解释】构造针对节点的检测结果，避免重复写 targetType。
     private Finding f(String type,String severity,Long id,String message) { return new Finding(type,severity,"NODE",id,message); }
     /** Tarjan SCC marks actual cycle members, not merely nodes downstream of cycles. */
     private static final class StrongComponents {
@@ -43,6 +47,9 @@ public class GraphAnalyzer {
             for(Long id:edges.keySet()) if(!index.containsKey(id)) visit(id);
         }
         void visit(Long id) {
+            // Tarjan：index 是首次访问序号，low 是沿搜索/栈内回边能到达的最小序号。
+            // 当 low==index 时弹出一个强连通分量，多节点分量或自环才算循环，循环下游节点不应误报。
+            // 修改这里需用自环、多节点循环、仅在循环下游和无环图分别验证，不建议只改比较符试结果。
             index.put(id,next);low.put(id,next++);stack.push(id);onStack.add(id);
             for(Long target:edges.get(id)) {
                 if(!index.containsKey(target)) {visit(target);low.put(id,Math.min(low.get(id),low.get(target)));}
@@ -55,6 +62,7 @@ public class GraphAnalyzer {
             }
         }
     }
+    // 【解释】队列遍历起点可到达节点，seen 去重避免循环死转。
     private Set<Long> reachable(Collection<Long> starts,Map<Long,Set<Long>> edges) {
         Set<Long> seen=new HashSet<>();Deque<Long> queue=new ArrayDeque<>(starts);
         while(!queue.isEmpty()) { Long id=queue.removeFirst();if(seen.add(id)) queue.addAll(edges.getOrDefault(id,Set.of())); }

@@ -7,6 +7,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/projects/{projectId}/player-progress")
+// 【MVC 入口】get 查看本人进度；reset 清空；override 设置测试存档。releaseId 可选，请求类型定义在 PlayerProgressService 内。
+// 【修改提示】路由、参数名变化需同步前端 API 和测试；业务权限/关联校验在 Service 保留，不在这里绕过。
 public class PlayerProgressController {
     private final PlayerProgressService service;private final CurrentUser current;
     public PlayerProgressController(PlayerProgressService service,CurrentUser current) {this.service=service;this.current=current;}

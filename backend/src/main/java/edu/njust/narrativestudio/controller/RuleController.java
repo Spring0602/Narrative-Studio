@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/projects/{projectId}")
+// 【MVC 入口】list/get/create/update/delete 管变量；rules 查询选项规则，replace 整组替换条件/效果/解锁树，不是单字段 PATCH。
+// 【修改提示】路由、参数名变化需同步前端 API 和测试；业务权限/关联校验在 Service 保留，不在这里绕过。
 public class RuleController {
     private final RuleService service;
     private final CurrentUser user;

@@ -17,6 +17,9 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
+// 【安全配置】filterChain 配置无状态认证、公开路由与 JWT 过滤顺序；passwordEncoder 提供 BCrypt；corsConfigurationSource 配置允许来源。
+// 【常见修改】前端端口变化优先改 app.cors.allowed-origin，保留明确来源；不要改成全路由 permitAll 来解决 401。
+// 当前 Bearer JWT 设计不依赖 Cookie 会话；若改 Cookie 登录，需要重新评估 CSRF，不能照搬禁用配置。
 public class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {

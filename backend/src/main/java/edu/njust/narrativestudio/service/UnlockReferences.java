@@ -13,6 +13,8 @@ public class UnlockReferences {
     public UnlockReferences(StoryChoiceMapper choices,PlayerProgressMapper progress,ObjectMapper json,UnlockRuleEngine engine) {
         this.choices=choices;this.progress=progress;this.json=json;this.engine=engine;
     }
+    // 【解释】扫描高级解锁规则和编辑稿跨局进度，阻止删除/改名仍使用的节点或变量标识。
+    // 【修改提示】冲突文案可改，不能遇到损坏进度就跳过检查；需先修复数据才能判断是否安全。
     public void requireUnused(Long project,String key,boolean variable) {
         for(var choice:choices.selectList(new LambdaQueryWrapper<StoryChoice>().eq(StoryChoice::getProjectId,project))) {
             if(engine.references(engine.decode(choice.getUnlockRule()),key,variable))

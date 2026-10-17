@@ -20,12 +20,17 @@ public class CharacterDetailService {
             NodeCharacterMapper cast,ProjectAccessService access,ProjectMutationGuard guard,FeatureScope scope) {
         this.relations=relations;this.knowledge=knowledge;this.cast=cast;this.access=access;this.guard=guard;this.scope=scope;
     }
+    // 【解释】查询本项目角色关系，按 ID 排序；筛选或排序变化保留 projectId 条件。
     public List<CharacterRelation> relations(Long u,Long p) {
         access.requireMember(u,p);
         return relations.selectList(new LambdaQueryWrapper<CharacterRelation>().eq(CharacterRelation::getProjectId,p).orderByAsc(CharacterRelation::getId));
     }
+    // 【解释】读取一条关系，先检查项目成员再检查关系归属。
     public CharacterRelation relation(Long u,Long p,Long id) { access.requireMember(u,p);return requireRelation(p,id); }
     @Transactional
+    // 【解释】id 为 null 新增，否则修改；两端角色必须属于本项目且不能自己关联自己。
+    // 【常见修改】关系类型最长 20 字符：DatabaseDtos.RelationRequest 的 @Size(max=40) 改为 20；同步前端。
+    // 更新用显式 .set(...)，允许清空 description，不要随意换成跳过 null 的更新方式。
     public CharacterRelation saveRelation(Long u,Long p,Long id,RelationRequest r) {
         guard.editor(u,p);
         scope.character(p,r.sourceCharacterId());scope.character(p,r.targetCharacterId());
@@ -41,21 +46,27 @@ public class CharacterDetailService {
         return c;
     }
     @Transactional
+    // 【解释】编辑者验证归属后删除角色关系，不删除两端角色。
     public void deleteRelation(Long u,Long p,Long id) { guard.editor(u,p);requireRelation(p,id);relations.deleteById(id); }
+    // 【解释】验证关系存在并属于本项目。
     private CharacterRelation requireRelation(Long p,Long id) {
         CharacterRelation c=relations.selectById(id);
         if(c==null || !p.equals(c.getProjectId())) throw BusinessException.notFound("角色关系不存在");
         return c;
     }
+    // 【解释】按项目及角色查询知识定义；不是模拟过程中实时获得的知识状态。
     public List<CharacterKnowledge> knowledge(Long u,Long p,Long character) {
         access.requireMember(u,p);scope.character(p,character);
         return knowledge.selectList(new LambdaQueryWrapper<CharacterKnowledge>().eq(CharacterKnowledge::getProjectId,p)
                 .eq(CharacterKnowledge::getCharacterId,character).orderByAsc(CharacterKnowledge::getId));
     }
+    // 【解释】验证角色归属，再读取该角色的指定知识。
     public CharacterKnowledge knowledgeItem(Long u,Long p,Long character,Long id) {
         access.requireMember(u,p);scope.character(p,character);return requireKnowledge(p,character,id);
     }
     @Transactional
+    // 【解释】保存知识标识、等级和获得节点；获得节点可为空，但不为空时必须属于项目。
+    // 【修改提示】知识等级由 DatabaseDtos.KnowledgeRequest 白名单约束，新增等级需同步运行态、前端和快照兼容，不只加字符串。
     public CharacterKnowledge saveKnowledge(Long u,Long p,Long character,Long id,KnowledgeRequest r) {
         guard.editor(u,p);scope.character(p,character);if(r.acquiredNodeId()!=null) scope.node(p,r.acquiredNodeId());
         CharacterKnowledge k=id==null?new CharacterKnowledge():requireKnowledge(p,character,id);
@@ -71,16 +82,21 @@ public class CharacterDetailService {
         return k;
     }
     @Transactional
+    // 【解释】编辑权限与角色/知识归属验证后删除定义。
     public void deleteKnowledge(Long u,Long p,Long character,Long id) {
         guard.editor(u,p);scope.character(p,character);requireKnowledge(p,character,id);knowledge.deleteById(id);
     }
+    // 【解释】项目、角色、知识 ID 三层匹配，避免跨角色修改。
     private CharacterKnowledge requireKnowledge(Long p,Long c,Long id) {
         CharacterKnowledge k=knowledge.selectById(id);
         if(k==null || !p.equals(k.getProjectId()) || !c.equals(k.getCharacterId())) throw BusinessException.notFound("角色知识不存在");
         return k;
     }
+    // 【解释】查询一个节点关联的出场角色 ID 列表。
     public List<Long> cast(Long u,Long p,Long node) { access.requireMember(u,p);scope.node(p,node);return cast.characters(node); }
     @Transactional
+    // 【解释】检查角色列表不重复且都属于本项目，再在事务中清空旧关联、插入完整新列表。
+    // 【常见修改】最多 50 个角色：DatabaseDtos.CastRequest 的 @Size(max=200) 改为 50；空列表代表清空关联，保留该语义。
     public List<Long> replaceCast(Long u,Long p,Long node,CastRequest r) {
         guard.editor(u,p);scope.node(p,node);
         if(new HashSet<>(r.characterIds()).size()!=r.characterIds().size()) throw FeatureScope.invalid("出场角色不能重复");
